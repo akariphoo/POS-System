@@ -1,0 +1,313 @@
+Table "SupplierBankAccount" {
+  "SupplierBankAccountID" char(36) [pk]
+  "SupplierID" char(36)
+  "BankName" varchar(100)
+  "AccountNumber" varchar(100)
+  "SwiftCode" varchar(20)
+}
+
+Table "BranchBankAccount" {
+  "BranchBankAccountID" char(36) [pk]
+  "BranchID" char(36)
+  "BankName" varchar(100)
+  "AccountNumber" varchar(100)
+  "SwiftCode" varchar(20)
+}
+
+Table "PurchaseOrder" {
+  "PurchaseOrderID" char(36) [pk]
+  "SupplierID" char(36)
+  "OrderDate" date
+  "TotalAmount" "decimal(10, 2)"
+}
+
+Table "SalesOrder" {
+  "SalesOrderID" char(36) [pk]
+  "CustomerID" char(36)
+  "EmployeeID" char(36)
+  "OrderDate" date
+  "TotalAmount" "decimal(10, 2)"
+}
+
+Table "SalesOrderTax" {
+  "SalesOrderTaxID" char(36) [pk]
+  "SalesOrderID" char(36)
+  "TaxID" char(36)
+}
+
+Table "StoreCreditTransaction" {
+  "StoreCreditTransactionID" char(36) [pk]
+  "StoreCreditID" char(36)
+  "TransactionDate" date
+  "Amount" "decimal(10, 2)"
+}
+
+Table "GiftCardTransaction" {
+  "GiftCardTransactionID" char(36) [pk]
+  "GiftCardID" char(36)
+  "TransactionDate" date
+  "Amount" "decimal(10, 2)"
+}
+
+Table "LoyaltyProgram" {
+  "LoyaltyProgramID" char(36) [pk]
+  "ProgramName" varchar(100)
+  "Description" varchar(255)
+}
+
+Table "Payment" {
+  "PaymentID" char(36) [pk]
+  "SalesOrderID" char(36)
+  "PaymentDate" date
+  "Amount" "decimal(10, 2)"
+  "PaymentMethod" varchar(50)
+}
+
+Table "Employee" {
+  "EmployeeID" char(36) [pk]
+  "FirstName" varchar(100)
+  "LastName" varchar(100)
+  "Position" varchar(100)
+  "DateHired" date
+  "BranchID" char(36)
+}
+
+Table "Promotion" {
+  "PromotionID" char(36) [pk]
+  "PromotionName" varchar(100)
+  "StartDate" date
+  "EndDate" date
+  "DiscountID" char(36)
+}
+
+Table "Expense" {
+  "ExpenseID" char(36) [pk]
+  "BranchID" char(36)
+  "ExpenseCategory" varchar(100)
+  "Amount" "decimal(10, 2)"
+  "ExpenseDate" date
+}
+
+Table "SupplierContact" {
+  "SupplierContactID" char(36) [pk]
+  "SupplierID" char(36)
+  "ContactName" varchar(100)
+  "Email" varchar(100)
+  "Phone" varchar(20)
+}
+
+Table "Inventory" {
+  "InventoryID" char(36) [pk]
+  "ProductID" char(36)
+  "BranchID" char(36)
+  "Quantity" int
+}
+
+Table "SalesOrderDiscount" {
+  "SalesOrderDiscountID" char(36) [pk]
+  "SalesOrderID" char(36)
+  "DiscountID" char(36)
+}
+
+Table "StoreCredit" {
+  "StoreCreditID" char(36) [pk]
+  "CustomerID" char(36)
+  "CreditAmount" "decimal(10, 2)"
+  "ExpiryDate" date
+}
+
+Table "SalesOrderDetail" {
+  "SalesOrderDetailID" char(36) [pk]
+  "SalesOrderID" char(36)
+  "ProductID" char(36)
+  "Quantity" int
+  "UnitPrice" "decimal(10, 2)"
+}
+
+Table "Branch" {
+  "BranchID" char(36) [pk]
+  "BranchName" varchar(100)
+  "Address" varchar(255)
+  "City" varchar(100)
+  "State" varchar(100)
+  "ZipCode" varchar(20)
+}
+
+Table "Customer" {
+  "CustomerID" char(36) [pk]
+  "FirstName" varchar(100)
+  "LastName" varchar(100)
+  "Email" varchar(100)
+}
+
+Table "Supplier" {
+  "SupplierID" char(36) [pk]
+  "SupplierName" varchar(100)
+  "ContactName" varchar(100)
+  "Phone" varchar(20)
+}
+
+Table "SupplierRating" {
+  "SupplierRatingID" char(36) [pk]
+  "SupplierID" char(36)
+  "Rating" int
+  "RatingDate" date
+  "Comments" varchar(255)
+}
+
+Table "AuditLog" {
+  "LogID" char(36) [pk]
+  "EmployeeID" char(36)
+  "Action" varchar(255)
+  "ActionTime" datetime
+}
+
+Table "Discount" {
+  "DiscountID" char(36) [pk]
+  "DiscountName" varchar(100)
+  "DiscountValue" "decimal(5, 2)"
+  "IsPercentage" boolean
+}
+
+Table "Product" {
+  "ProductID" char(36) [pk]
+  "ProductName" varchar(100)
+  "ProductDescription" varchar(255)
+  "Price" "decimal(10, 2)"
+  "Cost" "decimal(10, 2)"
+}
+
+Table "GiftCard" {
+  "GiftCardID" char(36) [pk]
+  "Code" varchar(36)
+  "Balance" "decimal(10, 2)"
+  "ExpiryDate" date
+}
+
+Table "Tax" {
+  "TaxID" char(36) [pk]
+  "TaxName" varchar(100)
+  "TaxRate" "decimal(5, 2)"
+}
+
+Table "ReturnOrder" {
+  "ReturnOrderID" char(36) [pk]
+  "SalesOrderID" char(36)
+  "ReturnDate" date
+  "ReturnReason" varchar(255)
+  "RefundAmount" "decimal(10, 2)"
+}
+
+Table "CustomerAddress" {
+  "CustomerAddressID" char(36) [pk]
+  "CustomerID" char(36)
+  "Address" varchar(255)
+  "City" varchar(100)
+  "State" varchar(100)
+  "ZipCode" varchar(20)
+  "IsPrimary" boolean
+}
+
+Table "Shift" {
+  "ShiftID" char(36) [pk]
+  "EmployeeID" char(36)
+  "StartTime" datetime
+  "EndTime" datetime
+}
+
+Table "CustomerLoyalty" {
+  "CustomerLoyaltyID" char(36) [pk]
+  "CustomerID" char(36)
+  "LoyaltyProgramID" char(36)
+  "PointsEarned" int
+  "EnrollmentDate" date
+}
+
+Table "Shipment" {
+  "ShipmentID" char(36) [pk]
+  "SalesOrderID" char(36)
+  "ShipmentDate" date
+  "TrackingNumber" varchar(100)
+  "Carrier" varchar(50)
+}
+
+Table "PurchaseOrderDetail" {
+  "PurchaseOrderDetailID" char(36) [pk]
+  "PurchaseOrderID" char(36)
+  "ProductID" char(36)
+  "Quantity" int
+  "UnitPrice" "decimal(10, 2)"
+}
+
+Table "ReturnOrderDetail" {
+  "ReturnOrderDetailID" char(36) [pk]
+  "ReturnOrderID" char(36)
+  "ProductID" char(36)
+  "Quantity" int
+}
+
+Ref:"Employee"."EmployeeID" < "SalesOrder"."EmployeeID"
+
+Ref:"Discount"."DiscountID" < "Promotion"."DiscountID"
+
+Ref:"SalesOrder"."SalesOrderID" < "SalesOrderDiscount"."SalesOrderID"
+
+Ref:"SalesOrder"."SalesOrderID" < "Shipment"."SalesOrderID"
+
+Ref:"Product"."ProductID" < "PurchaseOrderDetail"."ProductID"
+
+Ref:"ReturnOrder"."ReturnOrderID" < "ReturnOrderDetail"."ReturnOrderID"
+
+Ref:"Discount"."DiscountID" < "SalesOrderDiscount"."DiscountID"
+
+Ref:"Product"."ProductID" < "ReturnOrderDetail"."ProductID"
+
+Ref:"SalesOrder"."SalesOrderID" < "SalesOrderDetail"."SalesOrderID"
+
+Ref:"Product"."ProductID" < "Inventory"."ProductID"
+
+Ref:"Supplier"."SupplierID" < "SupplierBankAccount"."SupplierID"
+
+Ref:"Tax"."TaxID" < "SalesOrderTax"."TaxID"
+
+Ref:"Supplier"."SupplierID" < "SupplierRating"."SupplierID"
+
+Ref:"Employee"."EmployeeID" < "Shift"."EmployeeID"
+
+Ref:"LoyaltyProgram"."LoyaltyProgramID" < "CustomerLoyalty"."LoyaltyProgramID"
+
+Ref:"Customer"."CustomerID" < "CustomerAddress"."CustomerID"
+
+Ref:"Customer"."CustomerID" < "CustomerLoyalty"."CustomerID"
+
+Ref:"Customer"."CustomerID" < "SalesOrder"."CustomerID"
+
+Ref:"Supplier"."SupplierID" < "SupplierContact"."SupplierID"
+
+Ref:"StoreCredit"."StoreCreditID" < "StoreCreditTransaction"."StoreCreditID"
+
+Ref:"Branch"."BranchID" < "Expense"."BranchID"
+
+Ref:"SalesOrder"."SalesOrderID" < "SalesOrderTax"."SalesOrderID"
+
+Ref:"Customer"."CustomerID" < "StoreCredit"."CustomerID"
+
+Ref:"SalesOrder"."SalesOrderID" < "ReturnOrder"."SalesOrderID"
+
+Ref:"Branch"."BranchID" < "BranchBankAccount"."BranchID"
+
+Ref:"PurchaseOrder"."PurchaseOrderID" < "PurchaseOrderDetail"."PurchaseOrderID"
+
+Ref:"Supplier"."SupplierID" < "PurchaseOrder"."SupplierID"
+
+Ref:"Product"."ProductID" < "SalesOrderDetail"."ProductID"
+
+Ref:"SalesOrder"."SalesOrderID" < "Payment"."SalesOrderID"
+
+Ref:"Employee"."EmployeeID" < "AuditLog"."EmployeeID"
+
+Ref:"Branch"."BranchID" < "Employee"."BranchID"
+
+Ref:"Branch"."BranchID" < "Inventory"."BranchID"
+
+Ref:"GiftCard"."GiftCardID" < "GiftCardTransaction"."GiftCardID"

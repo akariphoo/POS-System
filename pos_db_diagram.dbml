@@ -1,0 +1,75 @@
+// user roles permissions
+Table users {
+  id bigint [primary key]
+  username varchar(50) [unique, not null]
+  login_id varchar(50) [unique, not null]
+  role_id bigint [not null]
+  phone varchar(50)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table roles {
+  id bigint [primary key]
+  name varchar(50) [unique, not null]
+  created_at timestamp
+  updated_at timestamp
+
+}
+
+Table permissions {
+  id bigint [primary key]
+  role_id bigint [not null]
+  name varchar(100) [not null]
+  code varchar(100) [not null]
+  created_at timestamp
+  updated_at timestamp
+
+}
+
+Ref: users.role_id > roles.id
+Ref: permissions.role_id > roles.id
+
+// exchange rates
+Table current_exchange_rates {
+  id bigint [primary key]
+  exchange_rate_history_id bigint [not null]
+  created_at timestamp
+  updated_at timestamp
+
+}
+
+Table exchange_rate_histories {
+  id bigint [primary key]
+  user_id bigint [not null]
+  base_currency char(3) [not null, note: 'CNY']
+  quote_currency char(3) [not null, note: 'MMK']
+  rate decimal(18,6) [not null, note: '1 CNY = X MMK']
+  status enum('active', 'inactive') [default: 'active']
+  effective_from datetime [not null, note: 'When rate becomes active']
+  effective_to datetime [note: 'NULL = current']
+  created_at timestamp
+  updated_at timestamp
+}
+
+Ref: current_exchange_rates.exchange_rate_history_id > exchange_rate_histories.id
+Ref: exchange_rate_histories.user_id > users.id
+
+//customers
+Table "customers" {
+  id bigint [primary key]
+  is_default boolean [default: false, note: 'Walk-in / default customer']
+  type enum('retail', 'wholesale') [default: 'retail']
+  name varchar(100) [not null]
+}
+
+//customers
+Table "customer_contacts" {
+  id bigint [primary key]
+  customer_id bigint [not null]
+  phone varchar(50) [not null]
+  nrc varchar(50)
+  address varchar(255)
+}
+
+Ref: customers.id > customer_contacts.customer_id
