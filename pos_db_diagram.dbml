@@ -1,6 +1,17 @@
+// branches
+Table "branches" {
+  id bigint [primary key]
+  is_default boolean [default: false, note: 'current/others']
+  branch_name varchar(100) [not null]
+  City varchar(100) [not null]
+  State varchar(100) [not null]
+  address varchar(255)
+}
+
 // user roles permissions
 Table users {
   id bigint [primary key]
+  branch_id bigint [not null]
   username varchar(50) [unique, not null]
   login_id varchar(50) [unique, not null]
   role_id bigint [not null]
@@ -27,6 +38,7 @@ Table permissions {
 
 }
 
+Ref: users.branch_id > branches.id
 Ref: users.role_id > roles.id
 Ref: permissions.role_id > roles.id
 
@@ -73,3 +85,126 @@ Table "customer_contacts" {
 }
 
 Ref: customers.id > customer_contacts.customer_id
+
+// inventory
+
+Table products {
+  id bigint [primary key]
+  sku varchar(50) [unique, not null]
+  barcode varchar(50) [unique, note: 'EAN / UPC / QR']
+
+  name varchar(100) [not null]
+  description varchar(255)
+
+  retail_price decimal(18,2) [not null]
+  wholesale_price decimal(18,2)
+  
+  created_at timestamp
+  updated_at timestamp
+}
+
+
+
+//Supplier
+Table suppliers {
+  id bigint [primary key]
+  supplier_name varchar(100) [not null]
+  contact_name varchar(100)
+  phone varchar(20)
+  email varchar(100)
+
+  created_at timestamp
+}
+
+Table purchase_orders {
+  id bigint [primary key]
+  supplier_id bigint [not null]
+  order_date date [not null]
+  total_amount decimal(18,2)
+
+  created_at timestamp
+}
+
+Table purchase_order_items {
+  id bigint [primary key]
+
+  purchase_order_id bigint [not null]
+  product_id bigint [not null]
+
+  quantity int [not null]
+  unit_cost decimal(18,2) [not null]
+
+  created_at timestamp
+}
+
+Table inventory_batches {
+  id bigint [primary key]
+
+  product_id bigint [not null]
+  branch_id bigint [not null]
+  purchase_order_item_id bigint [not null]
+
+  cost_price decimal(18,2) [not null]
+
+  quantity_received int [not null]
+  quantity_remaining int [not null]
+
+  received_at datetime [not null]
+  expire_date date
+
+  created_at timestamp
+
+  indexes {
+    (product_id, branch_id, received_at)
+  }
+}
+
+Table pos_sales {
+  id bigint [primary key]
+  branch_id bigint [not null]
+  customer_id bigint
+
+  total_amount decimal(18,2) [not null]
+  total_cost decimal(18,2) [not null]
+
+  created_at timestamp
+}
+
+Table pos_sale_items {
+  id bigint [primary key]
+
+  pos_sale_id bigint [not null]
+  product_id bigint [not null]
+
+  quantity int [not null]
+  unit_price decimal(18,2) [not null]
+
+  created_at timestamp
+}
+
+Table inventory_fifo_logs {
+  id bigint [primary key]
+
+  pos_sale_item_id bigint [not null]
+  inventory_batch_id bigint [not null]
+
+  quantity int [not null]
+  cost_price decimal(18,2) [not null]
+
+  created_at timestamp
+}
+
+Ref: purchase_orders.supplier_id > suppliers.id
+Ref: purchase_order_items.purchase_order_id > purchase_orders.id
+Ref: purchase_order_items.product_id > products.id
+
+Ref: inventory_batches.product_id > products.id
+Ref: inventory_batches.purchase_order_item_id > purchase_order_items.id
+
+Ref: pos_sale_items.pos_sale_id > pos_sales.id
+Ref: pos_sale_items.product_id > products.id
+
+Ref: inventory_fifo_logs.pos_sale_item_id > pos_sale_items.id
+Ref: inventory_fifo_logs.inventory_batch_id > inventory_batches.id
+
+
