@@ -1,0 +1,31 @@
+import { Routes, Route } from "react-router-dom";
+import { useState } from "react";
+import Sidebar from "./Sidebar";
+import Topbar from "./Topbar";
+import Dashboard from "./Dashboard";
+import UserList from "../users/UserList"; // adjust path
+
+export default function Layout() {
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const [activeMenu, setActiveMenu] = useState("dashboard");
+
+  return (
+    <div className="flex bg-gray-100 min-h-screen">
+      <Sidebar activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
+
+      <div className="flex-1 ml-64 flex flex-col">
+        <Topbar user={user} />
+
+        <main className="p-6 flex-1">
+          <Routes>
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="users" element={<UserList />} />
+            <Route path="sales" element={<div>Sales Page</div>} />
+            <Route path="products" element={<div>Products Page</div>} />
+            <Route path="reports" element={<div>Reports Page</div>} />
+          </Routes>
+        </main>
+      </div>
+    </div>
+  );
+}

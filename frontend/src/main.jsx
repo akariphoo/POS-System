@@ -1,9 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
+import Layout from "./pages/Layout";
 import "./index.css";
-import Dashboard from "./pages/Dashboard";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("token");
@@ -15,11 +15,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
+
+        {/* All protected pages */}
         <Route
-          path="/dashboard"
+          path="/*"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <Layout />
             </ProtectedRoute>
           }
         />
