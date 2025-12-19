@@ -12,11 +12,11 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'loginId' => 'required',
             'password' => 'required',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('login_id', $request->loginId)->first();
 
         // Check if user exists and password is correct
         if (!$user || !Hash::check($request->password, $user->password)) {
