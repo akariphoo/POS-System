@@ -4,6 +4,10 @@ import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import Dashboard from "./Dashboard";
 import UserList from "../users/UserList"; // adjust path
+import RoleAndPermission from "../role_and_permissions/RoleAndPermission";
+import ExchangeRateHistory from "../exchange_rate/ExchangeRateHistory";
+import BranchList from "../branches/BranchList";
+import CustomerList from "../customers/CustomerList";
 
 export default function Layout() {
   const user = JSON.parse(localStorage.getItem("user")) || {};
@@ -19,7 +23,11 @@ export default function Layout() {
         <main className="p-6 flex-1">
           <Routes>
             <Route path="dashboard" element={<Dashboard />} />
+            <Route path="branches" element={<BranchList />} />
             <Route path="users" element={<UserList />} />
+            <Route path="roleandpermission" element={<RoleAndPermission />} />
+            <Route path="exchange-rate-history" element={<ExchangeRateHistory />} />
+            <Route path="customers" element={<CustomerList />} />
             <Route path="sales" element={<div>Sales Page</div>} />
             <Route path="products" element={<div>Products Page</div>} />
             <Route path="reports" element={<div>Reports Page</div>} />

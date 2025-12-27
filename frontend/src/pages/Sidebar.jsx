@@ -7,7 +7,8 @@ import {
   ChevronDown,
   ChevronRight,
   Settings,
-  LogOut
+  LogOut,
+  UserPlus2Icon
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -65,11 +66,31 @@ export default function Sidebar() {
           onClick={() => toggleMenu("super_admin")}
         >
           <SubItem
+            label="Branches"
+            active={activeItem === "branches"}
+            onClick={() => navigate("/branches")}
+          />
+          <SubItem
             label="Staff List"
             active={activeItem === "users"}
             onClick={() => navigate("/users")}
           />
-          <SubItem label="Access Roles" />
+          <SubItem label="Role & Permission"
+            active={activeItem === "roleandpermission"}
+            onClick={() => navigate("/roleandpermission")} />
+        </SubMenu>
+
+        <SubMenu
+          icon={<UserPlus2Icon size={20} />}
+          label="People"
+          open={openMenu === "people"}
+          onClick={() => toggleMenu("people")}
+        >
+          <SubItem
+            label="Customers"
+            active={activeItem === "customers"}
+            onClick={() => navigate("/customers")}
+          />
         </SubMenu>
 
         <SubMenu
@@ -78,7 +99,11 @@ export default function Sidebar() {
           open={openMenu === "setting"}
           onClick={() => toggleMenu("setting")}
         >
-          <SubItem label="Store Info" />
+          <SubItem
+            label="Exchange Rates"
+            active={activeItem === "exchange-rate"}
+            onClick={() => navigate("/exchange-rate-history")}
+          />
           <SubItem label="Logout" danger />
         </SubMenu>
       </div>
@@ -135,7 +160,7 @@ function SubItem({ label, active, onClick, danger }) {
       className={`flex w-full text-left px-3 py-2 rounded-lg text-[13px] transition-all
         ${active
           ? "text-sky-600 font-bold bg-sky-50"
-          : danger 
+          : danger
             ? "text-rose-500 hover:bg-rose-50"
             : "text-slate-500 hover:text-sky-600 hover:bg-sky-50/50"
         }`}
