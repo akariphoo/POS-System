@@ -14,40 +14,47 @@ class UserSeeder extends Seeder
         $now = Carbon::now();
 
         // Get role IDs
-        $superAdminRoleId = DB::table('roles')->where('name', 'Super Admin')->value('id');
-        $adminRoleId      = DB::table('roles')->where('name', 'Admin')->value('id');
-        $cashierRoleId    = DB::table('roles')->where('name', 'Cashier')->value('id');
+        $adminRoleId   = DB::table('roles')->where('name', 'Admin')->value('id');
+        $managerRoleId = DB::table('roles')->where('name', 'Manager')->value('id');
+        $cashierRoleId = DB::table('roles')->where('name', 'Cashier')->value('id');
+
+        // Get branch IDs (Assuming you ran BranchSeeder first)
+        $yangonBranchId   = DB::table('branches')->where('city', 'Yangon')->value('id');
+        $mandalayBranchId = DB::table('branches')->where('city', 'Mandalay')->value('id');
 
         DB::table('users')->insert([
             [
-                'username'   => 'superadmin',
-                'login_id'   => 'SA001',
-                'role_id'    => $superAdminRoleId,
-                'phone'      => '0990000001',
-                'password'   => Hash::make('password'),
-                'remember_token' => null,
-                'created_at'=> $now,
-                'updated_at'=> $now,
-            ],
-            [
-                'username'   => 'admin',
-                'login_id'   => 'AD001',
+                'name'       => 'admin',
+                'login_id'   => 'admin',
                 'role_id'    => $adminRoleId,
+                'branch_id'  => $yangonBranchId, // Linked to Yangon
                 'phone'      => '0990000002',
                 'password'   => Hash::make('password'),
                 'remember_token' => null,
-                'created_at'=> $now,
-                'updated_at'=> $now,
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
-                'username'   => 'cashier',
-                'login_id'   => 'CS001',
+                'name'       => 'Manager',
+                'login_id'   => 'manager',
+                'role_id'    => $managerRoleId,
+                'branch_id'  => $yangonBranchId, // Linked to Yangon
+                'phone'      => '0990000001',
+                'password'   => Hash::make('password'),
+                'remember_token' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'name'       => 'Cashier',
+                'login_id'   => 'cashier',
                 'role_id'    => $cashierRoleId,
+                'branch_id'  => $mandalayBranchId, // Linked to Mandalay
                 'phone'      => '0990000003',
                 'password'   => Hash::make('password'),
                 'remember_token' => null,
-                'created_at'=> $now,
-                'updated_at'=> $now,
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
         ]);
     }

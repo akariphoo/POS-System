@@ -17,6 +17,7 @@ class RoleListResource extends JsonResource
          return [
             'id'    => $this->id,
             'name'  => $this->name,
+            'permission_ids' => $this->permissions->pluck('id'),
             'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
         ];
     }

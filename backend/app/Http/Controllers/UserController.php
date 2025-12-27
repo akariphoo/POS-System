@@ -65,7 +65,7 @@ class UserController extends BaseController
 
         $user = User::findOrFail($request->id);
 
-        $data = $request->only('name', 'email', 'role');
+        $data = $request->only('branch', 'name', 'login_id', 'role');
 
         if (!empty($request->password)) {
             $data['password'] = Hash::make($request->password);
