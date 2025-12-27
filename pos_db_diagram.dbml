@@ -1,3 +1,72 @@
+// currency
+Table currencies {
+  id bigint [primary key]
+  name char(3) [unique, not null, note: 'MMK, CNY'] 
+  created_at timestamp
+  updated_at timestamp
+}
+
+// capital
+Table capitals {
+  id bigint [primary key]
+  currency_id bigint [unique, not null]
+  initial_capital_amount DECIMAL(18, 6) [not null]
+  remaining_capital_amount DECIMAL(18, 6) [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+// Common Transaction History for daily
+Table common_daily_transactions {
+  id bigint [primary key]
+  type enum ('sale', 'expense', 'purchase')
+  date date
+  created_at timestamp
+  updated_at timestamp
+}
+
+// common daily transaction currency
+Table common_daily_transaction_currencies {
+    id bigint [primary key]
+    common_daily_transaction_id bigint [not null]
+    currency_id bigint [not null]
+    total_amount decimal(18, 6)
+}
+
+Ref: common_daily_transactions.id < common_daily_transaction_currencies.common_daily_transaction_id
+Ref: currencies.id < common_daily_transaction_currencies.currency_id
+
+// expense categories
+Table expense_categories {
+  id bigint [primary key]
+  name varchar(100)
+  description varchar(255)
+  created_at timestamp
+  updated_at timestamp
+}
+
+// Expense
+Table expenses {
+  id bigint [primary key]
+  date date
+  expense_category_id  bigint [not null]
+  description varchar(255)
+  created_at timestamp
+  updated_at timestamp
+}
+
+// Expense Currency
+Table expense_currencies {
+   id bigint [primary key]
+   expense_id bigint [not null]
+   currency_id bigint [not null]
+   amount decimal(18, 6)
+}
+
+Ref: expense_categories.id < expenses.expense_category_id
+Ref: expenses.id < expense_currencies.expense_id
+Ref: currencies.id < expense_currencies.currency_id
+
 // branches
 Table "branches" {
   id bigint [primary key]
@@ -12,8 +81,9 @@ Table "branches" {
 Table users {
   id bigint [primary key]
   branch_id bigint [not null]
-  username varchar(50) [unique, not null]
+  name varchar(50) [unique, not null]
   login_id varchar(50) [unique, not null]
+  password varchar(255) [not null]
   role_id bigint [not null]
   phone varchar(50)
   created_at timestamp
@@ -30,7 +100,7 @@ Table roles {
 
 Table permissions {
   id bigint [primary key]
-  role_id bigint [not null]
+  module varchar(50) [not Null]
   name varchar(100) [not null]
   code varchar(100) [not null]
   created_at timestamp
@@ -38,9 +108,19 @@ Table permissions {
 
 }
 
+Table role_permissions {
+  id bigint [primary key]
+  role_id bigint [not null]
+  permission_id bigint [not null]
+  created_at timestamp
+  updated_at timestamp
+
+}
+
 Ref: users.branch_id > branches.id
 Ref: users.role_id > roles.id
-Ref: permissions.role_id > roles.id
+Ref: permissions.id < role_permissions.permission_id
+Ref: roles.id < role_permissions.role_id
 
 // exchange rates
 Table current_exchange_rates {
@@ -84,25 +164,79 @@ Table "customer_contacts" {
   address varchar(255)
 }
 
-Ref: customers.id > customer_contacts.customer_id
+Ref: customers.id - customer_contacts.customer_id
 
 // inventory
 
 Table products {
   id bigint [primary key]
+  product_price_history_id bigint [note: "for query performance optimization"]
   sku varchar(50) [unique, not null]
   barcode varchar(50) [unique, note: 'EAN / UPC / QR']
-
   name varchar(100) [not null]
   description varchar(255)
-
-  retail_price decimal(18,2) [not null]
-  wholesale_price decimal(18,2)
-  
+  image text
   created_at timestamp
   updated_at timestamp
 }
 
+Table product_price_histories {
+    id bigint [primary key]
+    product_id bigint [not null]
+    retail_price decimal(18,2) [not null]
+    wholesale_price decimal(18,2)
+    curreny_id bigint [default: "MMK"]
+    user_id bigint [not null]
+    status enum ('active', 'inactive')
+    effective_from datetime [not null]
+    effective_to datetime
+}
+
+Table discounts {
+  id bigint [pk, increment]
+  name varchar(255) [not null]
+  discount_type enum('buy_x_get_y', 'fixed', 'percentage', 'order_fixed', 'order_percentage') [not null]
+  value decimal(10,2) [null, note: 'used for percentage or fixed amount']
+  buy_quantity int [null, note: "used for buy_x_get_y"]
+  get_quantity int [null, note: 'used for buy_x_get_y']
+  start_date date [null]
+  end_date date [null]
+  usage_limit int [null, note: ' max number of uses']
+  status enum('active','inactive') [default: 'active']
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table product_discounts {
+  id bigint [pk, increment]
+  product_id bigint [not null, ref: > products.id]
+  discount_id bigint [not null, ref: > discounts.id]
+  created_at timestamp
+  updated_at timestamp
+  Indexes {
+    (product_id, discount_id) [unique]
+  }
+}
+
+Table order_discounts {
+  id bigint [pk, increment]
+  discount_id bigint [not null, ref: > discounts.id]
+  created_at timestamp
+  updated_at timestamp
+}
+
+
+Table discount_usage_logs {
+  id bigint [pk, increment]
+  discount_id bigint [not null, ref: > discounts.id]
+  sale_order_detail_id bigint [ ref: > sale_order_details.id]
+  sale_order_id bigint [ ref: > sale_order_details.id]
+  quantity int
+  amount_saved decimal(10,2)
+  created_at timestamp
+}
+Ref: products.id < product_price_histories.product_id
+Ref: products.product_price_history_id - product_price_histories.id
 
 
 //Supplier
@@ -120,10 +254,18 @@ Table purchase_orders {
   id bigint [primary key]
   supplier_id bigint [not null]
   order_date date [not null]
-  total_amount decimal(18,2)
-
   created_at timestamp
 }
+
+Table purchase_order_currencies {
+    id bigint [primary key]
+    purchase_order_id bigint [not null]
+    currency_id bigint [not null]
+    total_amount decimal(18,6) [not null]
+}
+
+Ref: purchase_orders.id < purchase_order_currencies.purchase_order_id
+Ref: currencies.id < purchase_order_currencies.currency_id
 
 Table purchase_order_items {
   id bigint [primary key]
@@ -133,7 +275,7 @@ Table purchase_order_items {
 
   quantity int [not null]
   unit_cost decimal(18,2) [not null]
-
+  curreny_id bigint [default: 1, note: "1 = MMK"]
   created_at timestamp
 }
 
@@ -159,28 +301,84 @@ Table inventory_batches {
   }
 }
 
-Table pos_sales {
+Table sale_orders {
   id bigint [primary key]
   branch_id bigint [not null]
-  customer_id bigint
-
-  total_amount decimal(18,2) [not null]
-  total_cost decimal(18,2) [not null]
-
+  user_id bigint [not null]
+  customer_id bigint [not null]
+  total_sale_amount decimal(18,6) [not null, note: 'actual sale amount']
+  currency_id bigint [not null, default: 1, note: "1=MMK"]
+  exchange_rate_history_id bigint [not null]
   created_at timestamp
+  updated_at timestamp
 }
 
-Table pos_sale_items {
+Table sale_order_currencies {
   id bigint [primary key]
-
-  pos_sale_id bigint [not null]
-  product_id bigint [not null]
-
-  quantity int [not null]
-  unit_price decimal(18,2) [not null]
-
+  sale_order_id bigint [not null]
+  currency_id bigint [not null, note: "1=MMK, 2=CNY"]
+  amount_received decimal(18,6) [note: 'cash given by customer']
+  change_amount decimal(18,6) [note: 'cash back']
   created_at timestamp
+  updated_at timestamp
 }
+
+Table sale_order_payments {
+  id bigint [primary key]
+  sale_order_currency_id bigint [not null]
+  payment_method_id bigint [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table payment_methods {
+  id bigint [primary key]
+  name varchar(50) [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Ref: sale_order_currencies.sale_order_id > sale_orders.id
+Ref: sale_order_payments.sale_order_currency_id > sale_order_currencies.id
+Ref: sale_order_payments.payment_method_id > payment_methods.id
+
+Table sale_order_details {
+  id bigint [primary key]
+  sale_order_id bigint [not null]
+  product_id bigint [not null]
+  quantity int [not null]
+  line_total decimal(18,2) [not null, note: 'quantity * unit_price from products']
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table taxes {
+  id bigint [primary key]
+  tax_history_id bigint [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table tax_histories {
+  id bigint [primary key]
+  user_id bigint [not null]
+  tax_name char(50) [not null, default: 'Tax']
+  tax_rate decimal(5,2) [not null]
+  status enum('active', 'inactive') [default: 'active']
+  effective_from datetime [not null, note: 'When rate becomes active']
+  effective_to datetime [note: 'NULL = current']
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table sale_order_taxes {
+    id bigint [primary key]
+    tax_history_id bigint [not null]
+    sale_order_id bigint [not null]
+    created_at timestamp
+    updated_at timestamp
+}
+
 
 Table inventory_fifo_logs {
   id bigint [primary key]
@@ -201,10 +399,13 @@ Ref: purchase_order_items.product_id > products.id
 Ref: inventory_batches.product_id > products.id
 Ref: inventory_batches.purchase_order_item_id > purchase_order_items.id
 
-Ref: pos_sale_items.pos_sale_id > pos_sales.id
-Ref: pos_sale_items.product_id > products.id
+Ref: sale_order_details.sale_order_id > sale_orders.id
+Ref: sale_order_details.product_id > products.id
 
-Ref: inventory_fifo_logs.pos_sale_item_id > pos_sale_items.id
+Ref: inventory_fifo_logs.pos_sale_item_id > sale_order_details.id
 Ref: inventory_fifo_logs.inventory_batch_id > inventory_batches.id
 
 
+
+
+Ref: "permissions"."id" < "permissions"."created_at"
