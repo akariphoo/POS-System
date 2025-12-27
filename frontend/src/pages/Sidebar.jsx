@@ -11,6 +11,7 @@ import {
   UserPlus2Icon
 } from "lucide-react";
 import toast from "react-hot-toast";
+import api from "../config/api";
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -27,6 +28,24 @@ export default function Sidebar() {
 
   const toggleMenu = (menu) => {
     setOpenMenu(openMenu === menu ? null : menu);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await api.post("/logout");
+
+      // Clear storage
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      toast.success("Logged out successfully");
+
+      // Redirect to login
+      window.location.href = "/login";
+    } catch (error) {
+      console.error(error);
+      toast.error("Logout failed");
+    }
   };
 
   return (
@@ -104,7 +123,12 @@ export default function Sidebar() {
             active={activeItem === "exchange-rate"}
             onClick={() => navigate("/exchange-rate-history")}
           />
-          <SubItem label="Logout" danger />
+          <SubItem
+            label="Logout"
+            active={false}
+            onClick={handleLogout}
+          />
+
         </SubMenu>
       </div>
     </aside>
