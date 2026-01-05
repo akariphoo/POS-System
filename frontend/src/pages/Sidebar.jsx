@@ -119,6 +119,16 @@ export default function Sidebar() {
           onClick={() => toggleMenu("setting")}
         >
           <SubItem
+            label="Currency"
+            active={activeItem === "currency"}
+            onClick={() => navigate("/currency")}
+          />
+           <SubItem
+            label="Capital"
+            active={activeItem === "capital"}
+            onClick={() => navigate("/capital")}
+          />
+          <SubItem
             label="Exchange Rates"
             active={activeItem === "exchange-rate"}
             onClick={() => navigate("/exchange-rate-history")}
