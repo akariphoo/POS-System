@@ -128,6 +128,21 @@ export default function Sidebar() {
             active={activeItem === "capital"}
             onClick={() => navigate("/capital")}
           />
+           <SubItem
+            label="Expense Category"
+            active={activeItem === "expense_category"}
+            onClick={() => navigate("/expense-category")}
+          />
+          <SubItem
+            label="Expense"
+            active={activeItem === "expense"}
+            onClick={() => navigate("/expense")}
+          />
+          <SubItem
+            label="Tax"
+            active={activeItem === "tax"}
+            onClick={() => navigate("/tax")}
+          />
           <SubItem
             label="Exchange Rates"
             active={activeItem === "exchange-rate"}

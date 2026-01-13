@@ -11,6 +11,9 @@ import CustomerList from "../customers/CustomerList";
 import { Currency } from "lucide-react";
 import CurrencyList from "../currency/CurrencyList";
 import CapitalList from "../capitals/CapitalList";
+import ExpenseCategoryList from "../expense_categories/ExpenseCategoryList";
+import ExpenseList from "../expense/ExpenseList";
+import TaxList from "../taxes/TaxList";
 
 export default function Layout() {
   const user = JSON.parse(localStorage.getItem("user")) || {};
@@ -31,6 +34,9 @@ export default function Layout() {
             <Route path="roleandpermission" element={<RoleAndPermission />} />
             <Route path="currency" element={<CurrencyList />} />
             <Route path="capital" element={<CapitalList />} />
+            <Route path="expense-category" element={<ExpenseCategoryList />} />
+            <Route path="expense" element={<ExpenseList />} />
+            <Route path="tax" element={<TaxList />} />
             <Route path="exchange-rate-history" element={<ExchangeRateHistory />} />
             <Route path="customers" element={<CustomerList />} />
             <Route path="sales" element={<div>Sales Page</div>} />

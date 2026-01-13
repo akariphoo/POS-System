@@ -11,3 +11,6 @@ require __DIR__ . '/api/branch_api.php';
 require __DIR__ . '/api/customer_api.php';
 require __DIR__ . '/api/currency_api.php';
 require __DIR__ . '/api/capital_api.php';
+require __DIR__ . '/api/expense_category_api.php';
+require __DIR__ . '/api/expense_api.php';
+require __DIR__ . '/api/tax_api.php';
