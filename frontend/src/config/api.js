@@ -18,7 +18,10 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
+    // Don't redirect if it's a login request (let the login component handle it)
+    const isLoginRequest = error.config?.url?.includes('/login');
+    
+    if (error.response && error.response.status === 401 && !isLoginRequest) {
       toast.error("Session expired. Please login again.");
 
       // Clear token and user info
@@ -26,7 +29,7 @@ api.interceptors.response.use(
       localStorage.removeItem("user");
 
       // Redirect to login page
-      window.location.href = "/login"; // or use react-router's navigate
+      window.location.href = "/login";
     }
 
     return Promise.reject(error);

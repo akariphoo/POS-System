@@ -86,4 +86,29 @@ class BranchController extends BaseController
             200
         ]);
     }
+
+    /**
+     * Get active branch (is_default = true)
+     * Public endpoint for login page
+     */
+    public function getActiveBranch()
+    {
+        $branch = Branch::where('is_default', true)->first();
+
+        if (!$branch) {
+            return $this->handleServiceResponse([
+                false,
+                'No active branch found',
+                null,
+                404
+            ]);
+        }
+
+        return $this->handleServiceResponse([
+            true,
+            'Active branch retrieved successfully',
+            new BranchListResource($branch),
+            200
+        ]);
+    }
 }
