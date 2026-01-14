@@ -6,6 +6,7 @@ use App\Http\Requests\Branch\BranchStoreRequest;
 use App\Http\Resources\Branch\BranchListResource;
 use App\Models\Branch;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class BranchController extends BaseController
 {
@@ -30,6 +31,9 @@ class BranchController extends BaseController
         }
 
         $branch = Branch::create($validated);
+
+        // Clear the default branch cache
+        Cache::forget('default_branch');
 
         return $this->handleServiceResponse([
             true,
@@ -64,6 +68,9 @@ class BranchController extends BaseController
 
         $branch->update($request->all());
 
+        // Clear the default branch cache
+        Cache::forget('default_branch');
+
         return $this->handleServiceResponse([
             true,
             'Branch updated successfully',
@@ -79,6 +86,9 @@ class BranchController extends BaseController
         $branch = Branch::findOrFail($request->id);
         $branch->delete();
 
+        // Clear the default branch cache
+        Cache::forget('default_branch');
+
         return $this->handleServiceResponse([
             true,
             'Branch deleted successfully',
@@ -93,7 +103,9 @@ class BranchController extends BaseController
      */
     public function getActiveBranch()
     {
-        $branch = Branch::where('is_default', true)->first();
+        $branch = Cache::rememberForever('default_branch', function () {
+            return Branch::where('is_default', true)->first();
+        });
 
         if (!$branch) {
             return $this->handleServiceResponse([

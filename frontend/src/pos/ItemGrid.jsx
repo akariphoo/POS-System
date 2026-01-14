@@ -159,7 +159,7 @@ export default function ItemGrid({ onAddToCart }) {
       </div>
 
       {/* Filter Bar - Optimized for Rapid Pharmacy POS */}
-      <div className="flex flex-col md:flex-row items-stretch gap-2 sm:gap-3 mb-4 md:mb-6">
+      <div className="flex flex-col xl:flex-row items-stretch gap-2 sm:gap-3 mb-4 md:mb-6">
         
         {/* Search Container */}
         <div className="flex-1 relative group">
@@ -212,7 +212,7 @@ export default function ItemGrid({ onAddToCart }) {
       </div>
 
       {/* Item Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 lg:gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4 lg:gap-5">
         {filteredItems.map((item) => (
           <ItemCard key={item.id} item={item} onAddToCart={onAddToCart} />
         ))}

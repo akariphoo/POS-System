@@ -56,15 +56,13 @@ const RootRoute = () => {
 };
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/" element={<RootRoute />} />
+  <BrowserRouter>
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/" element={<RootRoute />} />
 
-        {/* All protected pages - routes based on role */}
-        <Route path="/*" element={<AppRoute />} />
-      </Routes>
-    </BrowserRouter>
-  </React.StrictMode>
+      {/* All protected pages - routes based on role */}
+      <Route path="/*" element={<AppRoute />} />
+    </Routes>
+  </BrowserRouter>
 );

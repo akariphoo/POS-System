@@ -1,10 +1,22 @@
 export default function ItemCard({ item, onAddToCart }) {
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
+  const formatCurrency = (amount, currency = "MMK") => {
+    // Format number with 2 decimal places
+    const formattedAmount = new Intl.NumberFormat("en-US", {
       minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount);
+
+    // Map currency codes to symbols
+    const currencySymbols = {
+      MMK: "K",
+      USD: "$",
+      CNY: "¥",
+    };
+
+    const symbol = currencySymbols[currency.toUpperCase()] || currency;
+    
+    // Return formatted amount with symbol
+    return `${symbol} ${formattedAmount}`;
   };
 
   return (
@@ -44,7 +56,7 @@ export default function ItemCard({ item, onAddToCart }) {
 
           <div className="flex items-center justify-between mt-auto gap-2">
             <p className="text-sm md:text-base lg:text-lg font-bold text-blue-700 truncate">
-              {formatCurrency(item.price)}
+              {formatCurrency(item.price, item.currency)}
             </p>
             
             {item.stock !== undefined && (

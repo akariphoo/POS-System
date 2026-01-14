@@ -1,19 +1,122 @@
-import { Plus, Minus, Trash2, AlertCircle } from "lucide-react";
-import { useState } from "react";
+import { Plus, Minus, Trash2, AlertCircle, X, Save, RefreshCw } from "lucide-react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import CartSummary from "./CartSummary";
+import api from "../config/api";
 
 export default function CartPanel({ cart, onUpdateQuantity, onRemoveItem }) {
   const [quantityInputs, setQuantityInputs] = useState({});
   const [quantityErrors, setQuantityErrors] = useState({});
   const [availableStock, setAvailableStock] = useState({});
+  const [exchangeRates, setExchangeRates] = useState([]);
+  const [isRateModalOpen, setIsRateModalOpen] = useState(false);
+  const [rateFormData, setRateFormData] = useState({
+    base_currency: "MMK",
+    quote_currency: "CNY",
+    rate: "",
+    status: "active",
+    effective_from: new Date().toISOString().slice(0, 16),
+    effective_to: "",
+  });
+  const [rateErrors, setRateErrors] = useState({});
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
+  // Fetch active exchange rates
+  const fetchExchangeRates = async () => {
+    try {
+      const res = await api.post("/exchange-rate/list");
+      if (res.data.status) {
+        // Filter for active rates only
+        const activeRates = res.data.data.filter(rate => rate.status === 'active');
+        setExchangeRates(activeRates);
+      }
+    } catch (error) {
+      console.error("Failed to fetch exchange rates:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchExchangeRates();
+  }, []);
+
+  // Get display rate (e.g., "1 MMK = 3.32 CNY")
+  const getDisplayRate = () => {
+    if (exchangeRates.length === 0) return null;
+    
+    // Find MMK to CNY or CNY to MMK rate
+    const mmkToCny = exchangeRates.find(
+      rate => rate.base_currency === "MMK" && rate.quote_currency === "CNY"
+    );
+    const cnyToMmk = exchangeRates.find(
+      rate => rate.base_currency === "CNY" && rate.quote_currency === "MMK"
+    );
+
+    if (mmkToCny) {
+      return { base: "MMK", quote: "CNY", rate: parseFloat(mmkToCny.rate).toFixed(2) };
+    } else if (cnyToMmk) {
+      // If we have CNY to MMK, calculate inverse
+      const inverseRate = (1 / parseFloat(cnyToMmk.rate)).toFixed(2);
+      return { base: "MMK", quote: "CNY", rate: inverseRate };
+    }
+
+    // Fallback: show first available rate
+    if (exchangeRates[0]) {
+      return {
+        base: exchangeRates[0].base_currency,
+        quote: exchangeRates[0].quote_currency,
+        rate: parseFloat(exchangeRates[0].rate).toFixed(2)
+      };
+    }
+
+    return null;
+  };
+
+  // Handle exchange rate update
+  const handleRateUpdate = async (e) => {
+    e.preventDefault();
+    setRateErrors({});
+    try {
+      const res = await api.post("/exchange-rate/store", rateFormData);
+      if (res.data.status) {
+        toast.success("Exchange rate updated successfully");
+        setIsRateModalOpen(false);
+        fetchExchangeRates();
+        setRateFormData({
+          base_currency: "MMK",
+          quote_currency: "CNY",
+          rate: "",
+          status: "active",
+          effective_from: new Date().toISOString().slice(0, 16),
+          effective_to: "",
+        });
+      }
+    } catch (err) {
+      if (err.response?.status === 422) {
+        setRateErrors(err.response.data.errors || {});
+        toast.error("Please check the highlighted fields");
+      } else {
+        toast.error(err.response?.data?.message || "Failed to update exchange rate");
+      }
+    }
+  };
+
+  const formatCurrency = (amount, currency = "MMK") => {
+    // Format number with 2 decimal places
+    const formattedAmount = new Intl.NumberFormat("en-US", {
       minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount);
+
+    // Map currency codes to symbols
+    const currencySymbols = {
+      MMK: "K",
+      USD: "$",
+      CNY: "¥",
+    };
+
+    const symbol = currencySymbols[currency.toUpperCase()] || currency;
+    
+    // Return formatted amount with symbol
+    return `${symbol} ${formattedAmount}`;
   };
 
 
@@ -23,15 +126,29 @@ export default function CartPanel({ cart, onUpdateQuantity, onRemoveItem }) {
       [itemId]: value
     }));
     
-    // Update available stock as user types
     const item = cart.find(i => i.id === itemId);
-    if (item?.stock !== undefined) {
-      const numValue = parseInt(value, 10);
+    if (!item) return;
+
+    const numValue = parseInt(value, 10);
+    
+    // Update available stock as user types
+    if (item.stock !== undefined) {
       const remainingStock = item.stock - (isNaN(numValue) ? 0 : numValue);
       setAvailableStock(prev => ({
         ...prev,
         [itemId]: remainingStock
       }));
+    }
+
+    // Update quantity immediately if valid number for dynamic price update
+    if (!isNaN(numValue) && numValue > 0) {
+      // Check stock limit
+      if (item.stock !== undefined && numValue > item.stock) {
+        // Don't update if exceeds stock, but still show the input value
+        return;
+      }
+      // Update quantity immediately for price calculation
+      onUpdateQuantity(itemId, numValue);
     }
   };
 
@@ -119,12 +236,39 @@ export default function CartPanel({ cart, onUpdateQuantity, onRemoveItem }) {
         toast.error(`Only ${totalStock} items available in stock for "${item.name}"`);
       } else {
         handleQuantityChange(itemId, newValue.toString());
+        // Update quantity immediately for price calculation
+        onUpdateQuantity(itemId, newValue);
         setQuantityErrors(prev => {
           const newState = { ...prev };
           delete newState[itemId];
           return newState;
         });
       }
+      return;
+    }
+
+    // Handle ArrowDown key
+    if (e.key === 'ArrowDown') {
+      const currentValue = parseInt(e.target.value || item.quantity, 10);
+      const newValue = Math.max(1, currentValue - 1);
+      
+      // Update available stock: total stock - entered value
+      if (totalStock !== undefined) {
+        const remainingStock = totalStock - newValue;
+        setAvailableStock(prev => ({
+          ...prev,
+          [itemId]: remainingStock
+        }));
+      }
+      
+      handleQuantityChange(itemId, newValue.toString());
+      // Update quantity immediately for price calculation
+      onUpdateQuantity(itemId, newValue);
+      setQuantityErrors(prev => {
+        const newState = { ...prev };
+        delete newState[itemId];
+        return newState;
+      });
       return;
     }
 
@@ -180,15 +324,63 @@ export default function CartPanel({ cart, onUpdateQuantity, onRemoveItem }) {
     }
   };
 
+  const displayRate = getDisplayRate();
+
   return (
     <div className="flex flex-col h-full">
       {/* Section Title */}
-      <div className="mb-2 sm:mb-3 md:mb-4">
-        <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Item Cart</h2>
+      <div className="mb-1 sm:mb-2 md:mb-3">
+        <div className="flex items-center justify-between gap-2 sm:gap-3">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Item Cart</h2>
+          <button
+            onClick={() => {
+              // Pre-fill form with current rate if available
+              if (displayRate) {
+                const currentRate = exchangeRates.find(
+                  r => r.base_currency === displayRate.base && r.quote_currency === displayRate.quote
+                ) || exchangeRates.find(
+                  r => r.base_currency === displayRate.quote && r.quote_currency === displayRate.base
+                );
+                
+                if (currentRate) {
+                  setRateFormData({
+                    base_currency: currentRate.base_currency,
+                    quote_currency: currentRate.quote_currency,
+                    rate: currentRate.rate,
+                    status: currentRate.status,
+                    effective_from: new Date().toISOString().slice(0, 16),
+                    effective_to: "",
+                  });
+                }
+              } else {
+                // Reset to default if no rate exists
+                setRateFormData({
+                  base_currency: "MMK",
+                  quote_currency: "CNY",
+                  rate: "",
+                  status: "active",
+                  effective_from: new Date().toISOString().slice(0, 16),
+                  effective_to: "",
+                });
+              }
+              setIsRateModalOpen(true);
+            }}
+            className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200 rounded-lg sm:rounded-xl transition-all duration-200 hover:shadow-md active:scale-95 group"
+          >
+            <RefreshCw size={12} className="text-blue-600 sm:w-3.5 sm:h-3.5 group-hover:rotate-180 transition-transform duration-500" />
+            <span className="text-[10px] xs:text-xs sm:text-sm font-semibold text-blue-700">
+              {displayRate ? (
+                <>1 {displayRate.base} = {displayRate.rate} {displayRate.quote}</>
+              ) : (
+                <>Set Exchange Rate</>
+              )}
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Cart Items */}
-      <div className="overflow-y-auto flex-1 min-h-0 -mx-1 sm:-mx-2 px-1 sm:px-2">
+      <div className="overflow-y-auto flex-1 min-h-[300px] -mx-1 sm:-mx-2 px-1 sm:px-2">
         {cart.length === 0 ? (
           <div className="text-center py-8 sm:py-10 md:py-12 px-3 sm:px-4">
             <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl sm:rounded-2xl border-2 border-dashed border-gray-300 p-6 sm:p-8">
@@ -215,7 +407,7 @@ export default function CartPanel({ cart, onUpdateQuantity, onRemoveItem }) {
               <tbody className="divide-y divide-gray-200">
                 {cart.map((item) => (
                   <tr key={item.id} className="hover:bg-blue-50/50 transition-colors duration-150">
-                    <td className="px-1.5 sm:px-2 md:px-4 py-2 sm:py-3 md:py-4">
+                    <td className="px-1.5 sm:px-2 md:px-4 py-1 sm:py-2 md:py-3">
                       <div className="flex items-center gap-2 sm:gap-3">
                         <div className="w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden flex-shrink-0 shadow-sm border border-gray-200">
                           <img
@@ -362,7 +554,14 @@ export default function CartPanel({ cart, onUpdateQuantity, onRemoveItem }) {
                     </td>
                     <td className="px-1.5 sm:px-2 md:px-4 py-2 sm:py-3 md:py-4 text-right">
                       <span className="text-xs sm:text-sm md:text-base font-bold text-gray-900">
-                        {formatCurrency(item.price * item.quantity)}
+                        {formatCurrency((() => {
+                          // Use input value if available and valid, otherwise use item quantity
+                          const inputValue = quantityInputs[item.id];
+                          const displayQuantity = inputValue !== undefined 
+                            ? (parseInt(inputValue, 10) || item.quantity)
+                            : item.quantity;
+                          return item.price * displayQuantity;
+                        })(), item.currency)}
                       </span>
                     </td>
                   </tr>
@@ -374,9 +573,179 @@ export default function CartPanel({ cart, onUpdateQuantity, onRemoveItem }) {
       </div>
 
       {/* Cart Summary */}
-      <div className="mt-3 sm:mt-4 md:mt-5 pt-3 sm:pt-4 md:pt-5 border-t-2 border-gray-200 flex-shrink-0">
+      <div className="mt-1 sm:mt-2 md:mt-3 pt-1 sm:pt-2 md:pt-3 border-t-2 border-gray-200 flex-shrink-0">
         <CartSummary cart={cart} />
       </div>
+
+      {/* Exchange Rate Update Modal */}
+      {isRateModalOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl sm:rounded-2xl w-full max-w-md shadow-2xl overflow-hidden border border-gray-200">
+            <div className="p-4 sm:p-6 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900">Update Exchange Rate</h3>
+              <button
+                onClick={() => {
+                  setIsRateModalOpen(false);
+                  setRateErrors({});
+                }}
+                className="p-1.5 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                <X size={20} className="text-gray-600" />
+              </button>
+            </div>
+
+            <form onSubmit={handleRateUpdate} className="p-4 sm:p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                {/* Base Currency */}
+                <div>
+                  <label className="text-[10px] xs:text-xs font-bold text-gray-600 uppercase tracking-wider block mb-1.5">
+                    Base Currency <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={3}
+                    className={`w-full border-2 rounded-lg px-3 py-2 text-sm outline-none transition-all ${
+                      rateErrors.base_currency
+                        ? "border-red-400 bg-red-50"
+                        : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    }`}
+                    value={rateFormData.base_currency}
+                    onChange={(e) =>
+                      setRateFormData({
+                        ...rateFormData,
+                        base_currency: e.target.value.toUpperCase(),
+                      })
+                    }
+                    placeholder="MMK"
+                  />
+                  {rateErrors.base_currency && (
+                    <p className="text-[10px] text-red-600 mt-1 font-medium">
+                      {rateErrors.base_currency[0]}
+                    </p>
+                  )}
+                </div>
+
+                {/* Quote Currency */}
+                <div>
+                  <label className="text-[10px] xs:text-xs font-bold text-gray-600 uppercase tracking-wider block mb-1.5">
+                    Quote Currency <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={3}
+                    className={`w-full border-2 rounded-lg px-3 py-2 text-sm outline-none transition-all ${
+                      rateErrors.quote_currency
+                        ? "border-red-400 bg-red-50"
+                        : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    }`}
+                    value={rateFormData.quote_currency}
+                    onChange={(e) =>
+                      setRateFormData({
+                        ...rateFormData,
+                        quote_currency: e.target.value.toUpperCase(),
+                      })
+                    }
+                    placeholder="CNY"
+                  />
+                  {rateErrors.quote_currency && (
+                    <p className="text-[10px] text-red-600 mt-1 font-medium">
+                      {rateErrors.quote_currency[0]}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                {/* Rate */}
+                <div>
+                  <label className="text-[10px] xs:text-xs font-bold text-gray-600 uppercase tracking-wider block mb-1.5">
+                    Rate <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.000001"
+                    className={`w-full border-2 rounded-lg px-3 py-2 text-sm outline-none transition-all ${
+                      rateErrors.rate
+                        ? "border-red-400 bg-red-50"
+                        : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    }`}
+                    value={rateFormData.rate}
+                    onChange={(e) =>
+                      setRateFormData({ ...rateFormData, rate: e.target.value })
+                    }
+                    placeholder="3.32"
+                  />
+                  {rateErrors.rate && (
+                    <p className="text-[10px] text-red-600 mt-1 font-medium">
+                      {rateErrors.rate[0]}
+                    </p>
+                  )}
+                </div>
+
+                {/* Status */}
+                <div>
+                  <label className="text-[10px] xs:text-xs font-bold text-gray-600 uppercase tracking-wider block mb-1.5">
+                    Status <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 text-sm outline-none appearance-none bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    value={rateFormData.status}
+                    onChange={(e) =>
+                      setRateFormData({ ...rateFormData, status: e.target.value })
+                    }
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] xs:text-xs font-bold text-gray-600 uppercase tracking-wider block mb-1.5">
+                  Effective From <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  className={`w-full border-2 rounded-lg px-3 py-2 text-sm outline-none transition-all ${
+                    rateErrors.effective_from
+                      ? "border-red-400 bg-red-50"
+                      : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  }`}
+                  value={rateFormData.effective_from}
+                  onChange={(e) =>
+                    setRateFormData({ ...rateFormData, effective_from: e.target.value })
+                  }
+                />
+                {rateErrors.effective_from && (
+                  <p className="text-[10px] text-red-600 mt-1 font-medium">
+                    {rateErrors.effective_from[0]}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsRateModalOpen(false);
+                    setRateErrors({});
+                  }}
+                  className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-bold hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
+                >
+                  <Save size={16} />
+                  Save Rate
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
