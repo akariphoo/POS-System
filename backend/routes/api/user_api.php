@@ -4,7 +4,8 @@ use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/users/list',   [UserController::class, 'list']);
+    Route::get('/users/init-data', [UserController::class, 'initData']);
+    Route::get('/users/list',   [UserController::class, 'list']);
     Route::post('/users/create', [UserController::class, 'create']);
     Route::post('/users/detail', [UserController::class, 'detail']);
     Route::post('/users/update', [UserController::class, 'update']);

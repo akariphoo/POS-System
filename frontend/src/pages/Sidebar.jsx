@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../config/api";
+import { hasPermission } from "../common/HasPermission";
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -99,6 +100,20 @@ export default function Sidebar() {
             onClick={() => navigate("/roleandpermission")} />
         </SubMenu>
 
+        {/* {(hasPermission('branches.view') || hasPermission('users.view') || hasPermission('role_permission.view')) && (
+          <SubMenu icon={<UserCog size={20} />} label="User Controls">
+            {hasPermission('branches.view') && (
+              <SubItem label="Branches" onClick={() => navigate("/branches")} />
+            )}
+            {hasPermission('users.view') && (
+              <SubItem label="Staff List" onClick={() => navigate("/users")} />
+            )}
+            {hasPermission('role_permission.view') && (
+              <SubItem label="Role & Permission" onClick={() => navigate("/roleandpermission")} />
+            )}
+          </SubMenu>
+        )} */}
+
         <SubMenu
           icon={<UserPlus2Icon size={20} />}
           label="People"
@@ -123,12 +138,12 @@ export default function Sidebar() {
             active={activeItem === "currency"}
             onClick={() => navigate("/currency")}
           />
-           <SubItem
+          <SubItem
             label="Capital"
             active={activeItem === "capital"}
             onClick={() => navigate("/capital")}
           />
-           <SubItem
+          <SubItem
             label="Expense Category"
             active={activeItem === "expense_category"}
             onClick={() => navigate("/expense-category")}

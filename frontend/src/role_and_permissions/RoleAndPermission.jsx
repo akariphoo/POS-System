@@ -34,13 +34,16 @@ export default function RoleAndPermission() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const roleRes = await api.post("/roles/list");
-      const permRes = await api.post("/permissions/list");
+      const res = await api.get("/roles/init-data");
 
-      if (roleRes.data?.status) setRoles(roleRes.data.data);
-      if (permRes.data?.status) setPermissions(permRes.data.data);
+      if (res.data?.status) {
+        // Destructure the combined data
+        const { roles, permissions } = res.data.data;
+        setRoles(roles || []);
+        setPermissions(permissions || {});
+      }
     } catch (error) {
-      toast.error("Failed to load data");
+      toast.error("Failed to load management data");
     } finally {
       setLoading(false);
     }

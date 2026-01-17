@@ -34,14 +34,12 @@ export default function UserList() {
   // --- Data Fetching ---
   const fetchData = async () => {
     try {
-      const [uRes, rRes, bRes] = await Promise.all([
-        api.post("/users/list"),
-        api.post("/roles/list"),
-        api.post("/branches/list")
-      ]);
-      setUsers(uRes.data.data || []);
-      setRoles(rRes.data.data || []);
-      setBranches(bRes.data.data || []);
+      const res = await api.get("/users/init-data");
+
+      setUsers(res.data.data.users || []);
+      setRoles(res.data.data.roles || []);
+      setBranches(res.data.data.branches || []);
+
     } catch (err) {
       toast.error("Failed to sync data with server");
     }
@@ -70,7 +68,7 @@ export default function UserList() {
       name: user.name,
       login_id: user.login_id,
       role_id: user.role_id,
-      branch_id: user.branch_id || "",
+      branch_id: user.branch_id,
       phone: user.phone || "",
       password: "",
       password_confirmation: "",

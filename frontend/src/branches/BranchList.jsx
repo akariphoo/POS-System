@@ -22,7 +22,7 @@ export default function BranchList() {
   // --- Data Fetching ---
   const fetchBranches = async () => {
     try {
-      const res = await api.post("/branches/list");
+      const res = await api.get("/branches/list");
       setBranches(res.data.data);
     } catch {
       toast.error("Failed to load branches");
@@ -41,7 +41,7 @@ export default function BranchList() {
 
   const executeDelete = async () => {
     try {
-      await api.post("/branches/delete", { id: deletingBranchId });
+      await api.delete(`/branches/delete/${deletingBranchId}`);
       toast.success("Branch deleted successfully");
       fetchBranches();
     } catch {
@@ -69,12 +69,12 @@ export default function BranchList() {
   const handleCreate = () => {
     setCreatingBranch(true);
     setEditingBranch(null);
-    setFormData({ 
-        branch_name: "", 
-        city: "", 
-        state: "", 
-        address: "", 
-        is_default: false 
+    setFormData({
+      branch_name: "",
+      city: "",
+      state: "",
+      address: "",
+      is_default: false
     });
     setErrors({});
   };
@@ -135,22 +135,22 @@ export default function BranchList() {
             {branches.map((branch) => (
               <tr key={branch.id} className="hover:bg-gray-50 transition-colors">
                 <td className="p-4 pl-6">
-                    <div className="flex items-center gap-2">
-                        <span className="text-gray-700 font-semibold">{branch.branch_name}</span>
-                       
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-700 font-semibold">{branch.branch_name}</span>
+
+                  </div>
                 </td>
                 <td className="p-4 text-gray-600 text-sm">
-                    {branch.city}, {branch.state}
+                  {branch.city}, {branch.state}
                 </td>
                 <td className="p-4 text-gray-500 text-xs italic truncate max-w-[200px]">
-                    {branch.address || "N/A"}
+                  {branch.address || "N/A"}
                 </td>
                 <td className="p-4">
                   <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${branch.is_default ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
-                     {branch.is_default ? (
-                            <span className="bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-black uppercase">Default</span>
-                        ) : <span className="bg-emerald-100 text-blue-600 px-2 py-0.5 rounded text-[10px] font-black uppercase">Regular</span>
+                    {branch.is_default ? (
+                      <span className="bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-black uppercase">Default</span>
+                    ) : <span className="bg-emerald-100 text-blue-600 px-2 py-0.5 rounded text-[10px] font-black uppercase">Regular</span>
                     }
                   </span>
                 </td>
@@ -234,16 +234,16 @@ export default function BranchList() {
 
               <div className="bg-sky-50 p-4 rounded-xl border border-sky-100">
                 <label className="flex items-center gap-3 cursor-pointer">
-                    <input 
-                        type="checkbox"
-                        checked={formData.is_default}
-                        onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
-                        className="w-5 h-5 rounded border-gray-300 text-sky-500 focus:ring-sky-500"
-                    />
-                    <div>
-                        <span className="block text-sm font-bold text-sky-900">Set as Default Branch</span>
-                        <span className="block text-[11px] text-sky-700">All new sales and stock will be linked here by default.</span>
-                    </div>
+                  <input
+                    type="checkbox"
+                    checked={formData.is_default}
+                    onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
+                    className="w-5 h-5 rounded border-gray-300 text-sky-500 focus:ring-sky-500"
+                  />
+                  <div>
+                    <span className="block text-sm font-bold text-sky-900">Set as Default Branch</span>
+                    <span className="block text-[11px] text-sky-700">All new sales and stock will be linked here by default.</span>
+                  </div>
                 </label>
               </div>
             </div>

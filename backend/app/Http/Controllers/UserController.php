@@ -7,12 +7,29 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\User\CreateUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Resources\User\UserListResource;
+use App\Models\Branch;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends BaseController
 {
+    public function initData()
+    {
+        return $this->handleServiceResponse([
+            true,
+            'Init data',
+            [
+                'users'    => UserListResource::collection(User::latest()->get()),
+                'roles'    => Role::select('id', 'name')->get(),
+                'branches' => Branch::select('id', 'branch_name')->get(),
+            ],
+            200
+        ]);
+    }
+
+
     // LIST USERS
     public function list()
     {
@@ -65,7 +82,7 @@ class UserController extends BaseController
 
         $user = User::findOrFail($request->id);
 
-        $data = $request->only('branch', 'name', 'login_id', 'role');
+        $data = $request->only('branch_id', 'name', 'login_id', 'role_id', 'phone');
 
         if (!empty($request->password)) {
             $data['password'] = Hash::make($request->password);

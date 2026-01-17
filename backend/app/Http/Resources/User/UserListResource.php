@@ -18,6 +18,7 @@ class UserListResource extends JsonResource
             'id'    => $this->id,
             'name'  => $this->name,
             'login_id' => $this->login_id,
+            'branch_id' => $this->branch_id,
             'branch_name' => optional($this->branch)->branch_name,
             'role_id'  => $this->role_id,
             'role'  => optional($this->role)->name,

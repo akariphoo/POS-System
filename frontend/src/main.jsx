@@ -16,7 +16,7 @@ const isAdminUser = () => {
   try {
     const user = JSON.parse(localStorage.getItem("user")) || {};
     // Check if role_id is 1 (typically Admin) or role name is Admin
-    return user.role_id === 1 || user.role?.name === "Admin" || user.role?.name === "admin";
+    return user.role_id == 1 || user.role?.name === "Admin" || user.role?.name === "admin" || user.role === 'Admin';
   } catch {
     return false;
   }

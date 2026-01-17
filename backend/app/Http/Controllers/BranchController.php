@@ -72,11 +72,13 @@ class BranchController extends BaseController
         ]);
     }
 
-    public function destroy(Request $request)
+    public function destroy($id)
     {
-        $request->validate(['id' => 'required|exists:branches,id']);
+        validator(['id' => $id], [
+            'id' => 'required|exists:branches,id'
+        ])->validate();
 
-        $branch = Branch::findOrFail($request->id);
+        $branch = Branch::findOrFail($id);
         $branch->delete();
 
         return $this->handleServiceResponse([

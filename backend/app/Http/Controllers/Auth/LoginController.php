@@ -51,6 +51,10 @@ class LoginController extends Controller
             // Delete existing tokens
             $user->tokens()->delete();
 
+            // Load the role and its permission codes
+            // This pulls only the 'code' column, resulting in an array like ["users.view", "branches.create"]
+            $permissions = $user->role ? $user->role->permissions->pluck('code')->toArray() : [];
+
             // Create new token
             $token = $user->createToken('pos-token')->plainTextToken;
 
@@ -58,11 +62,16 @@ class LoginController extends Controller
                 'success' => true,
                 'message' => 'Login successful! Welcome back.',
                 'data' => [
-                    'user' => $user,
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'login_id' => $user->login_id,
+                        'role' => $user->role->name ?? 'No Role',
+                        'permissions' => $permissions // Array of strings for frontend logic
+                    ],
                     'token' => $token
                 ]
             ], 200);
-
         } catch (ValidationException $e) {
             // Handle validation errors
             return response()->json([
