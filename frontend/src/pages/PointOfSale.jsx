@@ -77,7 +77,7 @@ export default function PointOfSale() {
   return (
     <div className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-white overflow-hidden">
       {/* Main Header */}
-      <div className="flex items-center justify-between px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 border-b border-gray-200 bg-white shadow-sm">
+      {/* <div className="flex items-center justify-between px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 border-b border-gray-200 bg-white shadow-sm">
         <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
           <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
             Point of Sale
@@ -86,7 +86,7 @@ export default function PointOfSale() {
         <button className="p-1.5 sm:p-2 md:p-2.5 hover:bg-gray-100 rounded-lg sm:rounded-xl transition-all hover:shadow-sm">
           <MoreVertical size={18} className="text-gray-600 sm:w-5 sm:h-5" />
         </button>
-      </div>
+      </div> */}
 
       {/* Main Content - Two Column Layout */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">

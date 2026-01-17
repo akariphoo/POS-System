@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../config/api";
 import toast, { Toaster } from "react-hot-toast";
@@ -12,15 +12,36 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [activeBranch, setActiveBranch] = useState(null);
   const [errors, setErrors] = useState({ loginId: "", password: "", general: "" });
+  const abortControllerRef = useRef(null);
 
   useEffect(() => {
+    // Create AbortController for this effect run
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+    
     const fetchActiveBranch = async () => {
       try {
-        const res = await api.get("/branches/active");
-        if (res.data.status && res.data.data) setActiveBranch(res.data.data);
-      } catch (error) { console.log("Could not fetch branch"); }
+        const res = await api.get("/branches/active", { signal });
+        // Only update state if request wasn't aborted
+        if (!signal.aborted && res.data.status && res.data.data) {
+          setActiveBranch(res.data.data);
+        }
+      } catch (error) {
+        // Don't log if it's an abort error (component unmounted or StrictMode cleanup)
+        if (error.name !== 'CanceledError' && error.code !== 'ERR_CANCELED' && !signal.aborted) {
+          console.log("Could not fetch branch");
+        }
+      }
     };
+    
     fetchActiveBranch();
+    
+    // Cleanup function to cancel request if component unmounts or StrictMode remounts
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, []);
 
   // Clear errors when user types
