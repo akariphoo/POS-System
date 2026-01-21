@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Edit, Trash2, Plus, Tags, X, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../config/api";
+import { hasPermission } from "../common/HasPermission";
 
 export default function ExpenseCategoryList() {
   const [categories, setCategories] = useState([]);
@@ -51,7 +52,7 @@ export default function ExpenseCategoryList() {
   const handleSave = async () => {
     setErrors({});
     const isUpdate = !!editingCategory;
-    
+
     try {
       let res;
       if (isUpdate) {
@@ -98,12 +99,14 @@ export default function ExpenseCategoryList() {
           <h2 className="text-xl font-bold text-gray-800">Expense Categories</h2>
           <p className="text-sm text-gray-400">Organize and track your business spending types</p>
         </div>
-        <button
-          className="bg-sky-500 text-white px-5 py-2.5 rounded-lg hover:bg-sky-700 flex items-center gap-2 font-bold transition-all shadow-md active:scale-95"
-          onClick={handleCreate}
-        >
-          <Plus size={20} /> Add Category
-        </button>
+        {hasPermission('expense_category.create') && (
+          <button
+            className="bg-sky-500 text-white px-5 py-2.5 rounded-lg hover:bg-sky-700 flex items-center gap-2 font-bold transition-all shadow-md active:scale-95"
+            onClick={handleCreate}
+          >
+            <Plus size={20} /> Add Category
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -127,20 +130,24 @@ export default function ExpenseCategoryList() {
                 </td>
                 <td className="p-4 text-center">
                   <div className="flex justify-center gap-2">
-                    <button className="p-2 text-sky-500 hover:bg-sky-100 rounded-lg transition-colors" onClick={() => handleEdit(cat)}>
-                      <Edit size={18} />
-                    </button>
-                    <button className="p-2 text-rose-500 hover:bg-rose-100 rounded-lg transition-colors" onClick={() => { setDeletingId(cat.id); setIsDeleteModalOpen(true); }}>
-                      <Trash2 size={18} />
-                    </button>
+                    {hasPermission('expense_category.edit') && (
+                      <button className="p-2 text-sky-500 hover:bg-sky-100 rounded-lg transition-colors" onClick={() => handleEdit(cat)}>
+                        <Edit size={18} />
+                      </button>
+                    )}
+                    {hasPermission('expense_category.delete') && (
+                      <button className="p-2 text-rose-500 hover:bg-rose-100 rounded-lg transition-colors" onClick={() => { setDeletingId(cat.id); setIsDeleteModalOpen(true); }}>
+                        <Trash2 size={18} />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
             ))}
             {categories.length === 0 && (
-                <tr>
-                    <td colSpan="3" className="p-10 text-center text-gray-400 italic">No categories found.</td>
-                </tr>
+              <tr>
+                <td colSpan="3" className="p-10 text-center text-gray-400 italic">No categories found.</td>
+              </tr>
             )}
           </tbody>
         </table>

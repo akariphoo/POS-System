@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Edit, Trash2, Plus, User, X, Phone, MapPin, CheckCircle2 } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../config/api";
+import { hasPermission } from "../common/HasPermission";
 
 export default function CustomerList() {
   const [customers, setCustomers] = useState([]);
@@ -67,13 +68,13 @@ export default function CustomerList() {
   const handleCreate = () => {
     setCreatingCustomer(true);
     setEditingCustomer(null);
-    setFormData({ 
-        name: "", 
-        type: "retail", 
-        phone: "", 
-        nrc: "", 
-        address: "", 
-        is_default: false 
+    setFormData({
+      name: "",
+      type: "retail",
+      phone: "",
+      nrc: "",
+      address: "",
+      is_default: false
     });
     setErrors({});
   };
@@ -110,9 +111,11 @@ export default function CustomerList() {
           <h2 className="text-xl font-bold text-gray-800">Customers</h2>
           <p className="text-sm text-gray-400">Manage client profiles and contact info</p>
         </div>
-        <button className="bg-sky-500 text-white px-5 py-2.5 rounded-lg hover:bg-sky-600 flex items-center gap-2 font-bold transition-all shadow-md active:scale-95" onClick={handleCreate}>
-          <Plus size={20} /> Add Customer
-        </button>
+        {hasPermission('customer.create') && (
+          <button className="bg-sky-500 text-white px-5 py-2.5 rounded-lg hover:bg-sky-600 flex items-center gap-2 font-bold transition-all shadow-md active:scale-95" onClick={handleCreate}>
+            <Plus size={20} /> Add Customer
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -131,16 +134,16 @@ export default function CustomerList() {
             {customers.map((cust) => (
               <tr key={cust.id} className="hover:bg-gray-50 transition-colors">
                 <td className="p-4 pl-6">
-                    <span className="text-gray-700 font-semibold">{cust.name}</span>
+                  <span className="text-gray-700 font-semibold">{cust.name}</span>
                 </td>
                 <td className="p-4">
-                    <div className="text-gray-600 text-sm">{cust.contact?.phone || 'N/A'}</div>
-                    <div className="text-gray-400 text-[10px]">{cust.contact?.nrc || 'No NRC'}</div>
+                  <div className="text-gray-600 text-sm">{cust.contact?.phone || 'N/A'}</div>
+                  <div className="text-gray-400 text-[10px]">{cust.contact?.nrc || 'No NRC'}</div>
                 </td>
                 <td className="p-4">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${cust.type === 'wholesale' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
-                        {cust.type}
-                    </span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${cust.type === 'wholesale' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
+                    {cust.type}
+                  </span>
                 </td>
                 <td className="p-4">
                   {cust.is_default && (
@@ -149,12 +152,16 @@ export default function CustomerList() {
                 </td>
                 <td className="p-4 text-center">
                   <div className="flex justify-center gap-2">
-                    <button className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors" onClick={() => handleEdit(cust)}>
-                      <Edit size={18} />
-                    </button>
-                    <button className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors" onClick={() => { setDeletingCustomerId(cust.id); setIsDeleteModalOpen(true); }}>
-                      <Trash2 size={18} />
-                    </button>
+                    {hasPermission('customer.edit') && (
+                      <button className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors" onClick={() => handleEdit(cust)}>
+                        <Edit size={18} />
+                      </button>
+                    )}
+                    {hasPermission('customer.delete') && (
+                      <button className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors" onClick={() => { setDeletingCustomerId(cust.id); setIsDeleteModalOpen(true); }}>
+                        <Trash2 size={18} />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -179,31 +186,31 @@ export default function CustomerList() {
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Customer Name *</label>
-                    <input
+                  <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Customer Name *</label>
+                  <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full border border-gray-200 p-2.5 rounded-lg focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none"
-                    />
-                    {renderError("name")}
+                  />
+                  {renderError("name")}
                 </div>
                 <div>
-                    <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Type</label>
-                    <select 
-                        value={formData.type}
-                        onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                        className="w-full border border-gray-200 p-2.5 rounded-lg outline-none"
-                    >
-                        <option value="retail">Retail</option>
-                        <option value="wholesale">Wholesale</option>
-                    </select>
+                  <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Type</label>
+                  <select
+                    value={formData.type}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                    className="w-full border border-gray-200 p-2.5 rounded-lg outline-none"
+                  >
+                    <option value="retail">Retail</option>
+                    <option value="wholesale">Wholesale</option>
+                  </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[13px] font-bold text-gray-700 mb-1.5 flex items-center gap-1"><Phone size={14}/> Phone *</label>
+                  <label className="block text-[13px] font-bold text-gray-700 mb-1.5 flex items-center gap-1"><Phone size={14} /> Phone *</label>
                   <input
                     type="text"
                     value={formData.phone}
@@ -227,7 +234,7 @@ export default function CustomerList() {
               </div>
 
               <div>
-                <label className="block text-[13px] font-bold text-gray-700 mb-1.5 flex items-center gap-1"><MapPin size={14}/> Address</label>
+                <label className="block text-[13px] font-bold text-gray-700 mb-1.5 flex items-center gap-1"><MapPin size={14} /> Address</label>
                 <textarea
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
@@ -239,16 +246,16 @@ export default function CustomerList() {
 
               <div className="bg-sky-50 p-4 rounded-xl border border-sky-100">
                 <label className="flex items-center gap-3 cursor-pointer">
-                    <input 
-                        type="checkbox"
-                        checked={formData.is_default}
-                        onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
-                        className="w-5 h-5 rounded border-gray-300 text-sky-500"
-                    />
-                    <div>
-                        <span className="block text-sm font-bold text-sky-900">Set as Default Customer</span>
-                        <span className="block text-[11px] text-sky-700">Usually used for 'Walk-in' customers.</span>
-                    </div>
+                  <input
+                    type="checkbox"
+                    checked={formData.is_default}
+                    onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
+                    className="w-5 h-5 rounded border-gray-300 text-sky-500"
+                  />
+                  <div>
+                    <span className="block text-sm font-bold text-sky-900">Set as Default Customer</span>
+                    <span className="block text-[11px] text-sky-700">Usually used for 'Walk-in' customers.</span>
+                  </div>
                 </label>
               </div>
             </div>

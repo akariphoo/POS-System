@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../config/api";
+import { hasPermission } from "../common/HasPermission";
 
 export default function ExchangeRateHistory() {
     const [history, setHistory] = useState([]);
@@ -67,16 +68,18 @@ export default function ExchangeRateHistory() {
                     <h2 className="text-2xl font-bold text-gray-800">Exchange Rates</h2>
                     <p className="text-sm text-gray-500">Manage currency conversion and history tracking</p>
                 </div>
-                <button
-                    onClick={() => {
-                        setFormData({ base_currency: "CNY", quote_currency: "MMK", rate: "", status: "active", effective_from: new Date().toISOString().slice(0, 16), effective_to: "" });
-                        setErrors({});
-                        setIsModalOpen(true);
-                    }}
-                    className="bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-bold transition-all shadow-lg shadow-sky-100"
-                >
-                    <Plus size={20} /> Update Rate
-                </button>
+                {hasPermission('exchange_rate.manage') && (
+                    <button
+                        onClick={() => {
+                            setFormData({ base_currency: "CNY", quote_currency: "MMK", rate: "", status: "active", effective_from: new Date().toISOString().slice(0, 16), effective_to: "" });
+                            setErrors({});
+                            setIsModalOpen(true);
+                        }}
+                        className="bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-bold transition-all shadow-lg shadow-sky-100"
+                    >
+                        <Plus size={20} /> Update Rate
+                    </button>
+                )}
             </div>
 
             {/* History Table */}

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Edit, Trash2, Plus, X, Wallet } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../config/api";
+import { hasPermission } from "../common/HasPermission";
 
 export default function CapitalList() {
   const [capitals, setCapitals] = useState([]);
@@ -45,15 +46,15 @@ export default function CapitalList() {
     setFormData(
       item
         ? {
-            currency_id: item.currency_id,
-            initial_capital_amount: item.initial_amount,
-            remaining_capital_amount: item.remaining_amount,
-          }
+          currency_id: item.currency_id,
+          initial_capital_amount: item.initial_amount,
+          remaining_capital_amount: item.remaining_amount,
+        }
         : {
-            currency_id: "",
-            initial_capital_amount: "",
-            remaining_capital_amount: "",
-          }
+          currency_id: "",
+          initial_capital_amount: "",
+          remaining_capital_amount: "",
+        }
     );
 
     setErrors({});
@@ -114,12 +115,14 @@ export default function CapitalList() {
             Manage business funds per currency
           </p>
         </div>
-        <button
-          className="bg-sky-500 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 font-bold"
-          onClick={() => handleOpenModal()}
-        >
-          <Plus size={20} /> Add Capital
-        </button>
+        {hasPermission('capital.create') && (
+          <button
+            className="bg-sky-500 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 font-bold"
+            onClick={() => handleOpenModal()}
+          >
+            <Plus size={20} /> Add Capital
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -148,22 +151,25 @@ export default function CapitalList() {
                 </td>
                 <td className="p-4 text-center">
                   <div className="flex justify-center gap-2">
-                    <button
-                      className="text-emerald-500 p-2"
-                      onClick={() => handleOpenModal(cap)}
-                    >
-                      <Edit size={18} />
-                    </button>
-
-                    <button
-                      className="text-rose-500 p-2"
-                      onClick={() => {
-                        setDeletingId(cap.id);
-                        setIsDeleteModalOpen(true);
-                      }}
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    {hasPermission('capital.edit') && (
+                      <button
+                        className="text-emerald-500 p-2"
+                        onClick={() => handleOpenModal(cap)}
+                      >
+                        <Edit size={18} />
+                      </button>
+                    )}
+                    {hasPermission('capital.delete') && (
+                      <button
+                        className="text-rose-500 p-2"
+                        onClick={() => {
+                          setDeletingId(cap.id);
+                          setIsDeleteModalOpen(true);
+                        }}
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>

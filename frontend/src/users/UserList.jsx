@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Edit, Trash2, Plus, Eye, EyeOff, X, MapPin, Phone } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../config/api";
+import { hasPermission } from "../common/HasPermission";
 
 export default function UserList() {
   const [users, setUsers] = useState([]);
@@ -127,9 +128,11 @@ export default function UserList() {
           <h2 className="text-xl font-bold text-gray-800">System Users</h2>
           <p className="text-sm text-gray-400">Manage access levels and branch assignments</p>
         </div>
-        <button onClick={handleCreate} className="bg-sky-500 text-white px-5 py-2.5 rounded-lg hover:bg-sky-600 flex items-center gap-2 font-bold shadow-md active:scale-95 transition-all">
-          <Plus size={20} /> Add New User
-        </button>
+        {hasPermission('users.create') && (
+          <button onClick={handleCreate} className="bg-sky-500 text-white px-5 py-2.5 rounded-lg hover:bg-sky-600 flex items-center gap-2 font-bold shadow-md active:scale-95 transition-all">
+            <Plus size={20} /> Add New User
+          </button>
+        )}
       </div>
 
       {/* Table Section */}
@@ -165,8 +168,12 @@ export default function UserList() {
                 </td>
                 <td className="p-4 text-center">
                   <div className="flex justify-center gap-1">
-                    <button onClick={() => handleEdit(user)} className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors"><Edit size={18} /></button>
-                    <button onClick={() => confirmDelete(user.id)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"><Trash2 size={18} /></button>
+                    {hasPermission('users.edit') && (
+                      <button onClick={() => handleEdit(user)} className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors"><Edit size={18} /></button>
+                    )}
+                    {hasPermission('users.delete') && (
+                      <button onClick={() => confirmDelete(user.id)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"><Trash2 size={18} /></button>
+                    )}
                   </div>
                 </td>
               </tr>

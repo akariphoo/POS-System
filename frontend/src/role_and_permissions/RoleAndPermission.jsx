@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../config/api";
+import { hasPermission } from "../common/HasPermission";
 
 export default function RoleAndPermission() {
   const [roles, setRoles] = useState([]);
@@ -115,17 +116,19 @@ export default function RoleAndPermission() {
           <h2 className="text-2xl font-bold text-slate-800">Role Management</h2>
           <p className="text-slate-500 text-sm">Define what your staff can and cannot do.</p>
         </div>
-        <button
-          onClick={() => {
-            setSelectedRole(null);
-            setRoleName("");
-            setSelectedPerms([]);
-            setIsModalOpen(true);
-          }}
-          className="bg-sky-500 hover:bg-sky-600 text-white px-5 py-2.5 rounded-xl flex gap-2 items-center transition-all shadow-lg shadow-sky-100"
-        >
-          <Plus size={20} /> Create New Role
-        </button>
+        {hasPermission('role_permission.create') && (
+          <button
+            onClick={() => {
+              setSelectedRole(null);
+              setRoleName("");
+              setSelectedPerms([]);
+              setIsModalOpen(true);
+            }}
+            className="bg-sky-500 hover:bg-sky-600 text-white px-5 py-2.5 rounded-xl flex gap-2 items-center transition-all shadow-lg shadow-sky-100"
+          >
+            <Plus size={20} /> Create New Role
+          </button>
+        )}
       </div>
 
       {/* Role Grid */}
@@ -137,12 +140,16 @@ export default function RoleAndPermission() {
                 <ShieldCheck className="text-sky-500" size={24} />
               </div>
               <div className="flex gap-1">
-                <button onClick={() => openEditModal(role)} className="p-2 hover:bg-sky-50 text-slate-400 hover:text-sky-500 rounded-lg">
-                  <Edit size={18} />
-                </button>
-                <button onClick={() => confirmDelete(role)} className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-500 rounded-lg">
-                  <Trash2 size={18} />
-                </button>
+                {hasPermission('role_permission.edit') && (
+                  <button onClick={() => openEditModal(role)} className="p-2 hover:bg-sky-50 text-slate-400 hover:text-sky-500 rounded-lg">
+                    <Edit size={18} />
+                  </button>
+                )}
+                {hasPermission('role_permission.delete') && (
+                  <button onClick={() => confirmDelete(role)} className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-500 rounded-lg">
+                    <Trash2 size={18} />
+                  </button>
+                )}
               </div>
             </div>
             <h3 className="text-lg font-bold text-slate-800">{role.name}</h3>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Edit, Trash2, Plus, MapPin, X, CheckCircle2 } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../config/api";
+import { hasPermission } from "../common/HasPermission";
 
 export default function BranchList() {
   const [branches, setBranches] = useState([]);
@@ -30,6 +31,8 @@ export default function BranchList() {
   };
 
   useEffect(() => {
+      console.log("BranchList Mounted"); // If this prints twice, it's Strict Mode or a Parent re-render
+
     fetchBranches();
   }, []);
 
@@ -111,12 +114,14 @@ export default function BranchList() {
           <h2 className="text-xl font-bold text-gray-800">Branches</h2>
           <p className="text-sm text-gray-400">Manage shop locations and defaults</p>
         </div>
-        <button
-          className="bg-sky-500 text-white px-5 py-2.5 rounded-lg hover:bg-sky-600 flex items-center gap-2 font-bold transition-all shadow-md active:scale-95"
-          onClick={handleCreate}
-        >
-          <Plus size={20} /> Add Branch
-        </button>
+        {hasPermission('branches.create') && (
+          <button
+            className="bg-sky-500 text-white px-5 py-2.5 rounded-lg hover:bg-sky-600 flex items-center gap-2 font-bold transition-all shadow-md active:scale-95"
+            onClick={handleCreate}
+          >
+            <Plus size={20} /> Add Branch
+          </button>
+        )}
       </div>
 
       {/* Branches Table */}
@@ -156,12 +161,16 @@ export default function BranchList() {
                 </td>
                 <td className="p-4 text-center">
                   <div className="flex justify-center gap-2">
-                    <button className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors" onClick={() => handleEdit(branch)}>
-                      <Edit size={18} />
-                    </button>
-                    <button className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors" onClick={() => confirmDelete(branch.id)}>
-                      <Trash2 size={18} />
-                    </button>
+                    {hasPermission('branches.edit') && (
+                      <button className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors" onClick={() => handleEdit(branch)}>
+                        <Edit size={18} />
+                      </button>
+                    )}
+                    {hasPermission('branches.delete') && (
+                      <button className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors" onClick={() => confirmDelete(branch.id)}>
+                        <Trash2 size={18} />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>

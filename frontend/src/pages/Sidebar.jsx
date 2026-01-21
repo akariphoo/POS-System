@@ -79,97 +79,132 @@ export default function Sidebar() {
           Administrator
         </p>
 
-        <SubMenu
-          icon={<UserCog size={20} />}
-          label="User Controls"
-          open={openMenu === "super_admin"}
-          onClick={() => toggleMenu("super_admin")}
-        >
-          <SubItem
-            label="Branches"
-            active={activeItem === "branches"}
-            onClick={() => navigate("/branches")}
-          />
-          <SubItem
-            label="Staff List"
-            active={activeItem === "users"}
-            onClick={() => navigate("/users")}
-          />
-          <SubItem label="Role & Permission"
-            active={activeItem === "roleandpermission"}
-            onClick={() => navigate("/roleandpermission")} />
-        </SubMenu>
+        {(hasPermission('branches.view') ||
+          hasPermission('users.view') ||
+          hasPermission('role_permission.view')) && (
 
-        {/* {(hasPermission('branches.view') || hasPermission('users.view') || hasPermission('role_permission.view')) && (
-          <SubMenu icon={<UserCog size={20} />} label="User Controls">
-            {hasPermission('branches.view') && (
-              <SubItem label="Branches" onClick={() => navigate("/branches")} />
-            )}
-            {hasPermission('users.view') && (
-              <SubItem label="Staff List" onClick={() => navigate("/users")} />
-            )}
-            {hasPermission('role_permission.view') && (
-              <SubItem label="Role & Permission" onClick={() => navigate("/roleandpermission")} />
-            )}
+            <SubMenu
+              icon={<UserCog size={20} />}
+              label="User Controls"
+              open={openMenu === "super_admin"}
+              onClick={() => toggleMenu("super_admin")}
+            >
+
+              {hasPermission('branches.view') && (
+                <SubItem
+                  label="Branches"
+                  onClick={() => navigate("/branches")}
+                />
+              )}
+
+              {hasPermission('users.view') && (
+                <SubItem
+                  label="Staff List"
+                  onClick={() => navigate("/users")}
+                />
+              )}
+
+              {hasPermission('role_permission.view') && (
+                <SubItem
+                  label="Role & Permission"
+                  onClick={() => navigate("/roleandpermission")}
+                />
+              )}
+
+            </SubMenu>
+          )}
+
+        {
+          hasPermission('customers.view') &&
+          <SubMenu
+            icon={<UserPlus2Icon size={20} />}
+            label="People"
+            open={openMenu === "people"}
+            onClick={() => toggleMenu("people")}
+          >
+            {hasPermission('customers.view') &&
+              <SubItem
+                label="Customers"
+                active={activeItem === "customers"}
+                onClick={() => navigate("/customers")}
+              />
+            }
           </SubMenu>
-        )} */}
+        }
 
-        <SubMenu
-          icon={<UserPlus2Icon size={20} />}
-          label="People"
-          open={openMenu === "people"}
-          onClick={() => toggleMenu("people")}
-        >
-          <SubItem
-            label="Customers"
-            active={activeItem === "customers"}
-            onClick={() => navigate("/customers")}
-          />
-        </SubMenu>
 
-        <SubMenu
-          icon={<Settings size={20} />}
-          label="System Setting"
-          open={openMenu === "setting"}
-          onClick={() => toggleMenu("setting")}
-        >
-          <SubItem
-            label="Currency"
-            active={activeItem === "currency"}
-            onClick={() => navigate("/currency")}
-          />
-          <SubItem
-            label="Capital"
-            active={activeItem === "capital"}
-            onClick={() => navigate("/capital")}
-          />
-          <SubItem
-            label="Expense Category"
-            active={activeItem === "expense_category"}
-            onClick={() => navigate("/expense-category")}
-          />
-          <SubItem
-            label="Expense"
-            active={activeItem === "expense"}
-            onClick={() => navigate("/expense")}
-          />
-          <SubItem
-            label="Tax"
-            active={activeItem === "tax"}
-            onClick={() => navigate("/tax")}
-          />
-          <SubItem
-            label="Exchange Rates"
-            active={activeItem === "exchange-rate"}
-            onClick={() => navigate("/exchange-rate-history")}
-          />
-          <SubItem
-            label="Logout"
-            active={false}
-            onClick={handleLogout}
-          />
+        {(hasPermission('currency.view') ||
+          hasPermission('capital.view') ||
+          hasPermission('expense_category.view') ||
+          hasPermission('expense.view') ||
+          hasPermission('tax.view') ||
+          hasPermission('exchange_rate.view')) && (
 
-        </SubMenu>
+            <SubMenu
+              icon={<Settings size={20} />}
+              label="System Setting"
+              open={openMenu === "setting"}
+              onClick={() => toggleMenu("setting")}
+            >
+
+              {hasPermission('currency.view') && (
+                <SubItem
+                  label="Currency"
+                  active={activeItem === "currency"}
+                  onClick={() => navigate("/currency")}
+                />
+              )}
+
+              {hasPermission('capital.view') && (
+                <SubItem
+                  label="Capital"
+                  active={activeItem === "capital"}
+                  onClick={() => navigate("/capital")}
+                />
+              )}
+
+              {hasPermission('expense_category.view') && (
+                <SubItem
+                  label="Expense Category"
+                  active={activeItem === "expense_category"}
+                  onClick={() => navigate("/expense-category")}
+                />
+              )}
+
+              {hasPermission('expense.view') && (
+                <SubItem
+                  label="Expense"
+                  active={activeItem === "expense"}
+                  onClick={() => navigate("/expense")}
+                />
+              )}
+
+              {hasPermission('tax.view') && (
+                <SubItem
+                  label="Tax"
+                  active={activeItem === "tax"}
+                  onClick={() => navigate("/tax")}
+                />
+              )}
+
+              {hasPermission('exchange_rate.view') && (
+                <SubItem
+                  label="Exchange Rates"
+                  active={activeItem === "exchange-rate"}
+                  onClick={() => navigate("/exchange-rate-history")}
+                />
+              )}
+
+              {/* Logout usually allowed for all authenticated users */}
+              <SubItem
+                label="Logout"
+                active={false}
+                onClick={handleLogout}
+              />
+
+            </SubMenu>
+          )}
+
       </div>
     </aside>
   );

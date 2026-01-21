@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Edit, Trash2, Plus, X, Landmark } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../config/api";
+import { hasPermission } from "../common/HasPermission";
 
 export default function CurrencyList() {
   const [currencies, setCurrencies] = useState([]);
@@ -63,12 +64,14 @@ export default function CurrencyList() {
           <h2 className="text-xl font-bold text-gray-800">Currencies</h2>
           <p className="text-sm text-gray-400">Manage ISO currency codes for your POS</p>
         </div>
-        <button
-          className="bg-sky-500 text-white px-5 py-2.5 rounded-lg hover:bg-sky-600 flex items-center gap-2 font-bold transition-all shadow-md active:scale-95"
-          onClick={() => { setCreatingCurrency(true); setEditingCurrency(null); setFormData({ name: "" }); setErrors({}); }}
-        >
-          <Plus size={20} /> Add Currency
-        </button>
+        {hasPermission('currency.create') && (
+          <button
+            className="bg-sky-500 text-white px-5 py-2.5 rounded-lg hover:bg-sky-600 flex items-center gap-2 font-bold transition-all shadow-md active:scale-95"
+            onClick={() => { setCreatingCurrency(true); setEditingCurrency(null); setFormData({ name: "" }); setErrors({}); }}
+          >
+            <Plus size={20} /> Add Currency
+          </button>
+        )}
       </div>
 
       <div className="bg-white rounded-b-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -87,12 +90,16 @@ export default function CurrencyList() {
                 <td className="p-4 text-gray-500 text-sm">{currency.created_at}</td>
                 <td className="p-4 text-center">
                   <div className="flex justify-center gap-2">
-                    <button className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-lg" onClick={() => { setEditingCurrency(currency); setFormData({ name: currency.name }); }}>
-                      <Edit size={18} />
-                    </button>
-                    <button className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg" onClick={() => { setDeletingId(currency.id); setIsDeleteModalOpen(true); }}>
-                      <Trash2 size={18} />
-                    </button>
+                    {hasPermission('currency.edit') && (
+                      <button className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-lg" onClick={() => { setEditingCurrency(currency); setFormData({ name: currency.name }); }}>
+                        <Edit size={18} />
+                      </button>
+                    )}
+                    {hasPermission('currency.delete') && (
+                      <button className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg" onClick={() => { setDeletingId(currency.id); setIsDeleteModalOpen(true); }}>
+                        <Trash2 size={18} />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -122,11 +129,11 @@ export default function CurrencyList() {
                 placeholder="USD"
               />
               {errors.name && <p className="text-red-500 text-[11px] mt-1 font-medium">{errors.name[0]}</p>}
-              
+
               <div className="mt-8 flex gap-3">
                 <button className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-bold" onClick={() => { setEditingCurrency(null); setCreatingCurrency(false); }}>Cancel</button>
                 <button className="flex-1 px-4 py-2.5 bg-sky-500 text-white rounded-lg font-bold hover:bg-sky-600" onClick={handleSave}>
-                    {editingCurrency ? "Update" : "Create"}
+                  {editingCurrency ? "Update" : "Create"}
                 </button>
               </div>
             </div>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Percent, Plus, Edit, Trash2, Calendar, User, ShieldCheck, X } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../config/api";
+import { hasPermission } from "../common/HasPermission";
 
 export default function TaxList() {
     const [taxes, setTaxes] = useState([]);
@@ -45,9 +46,11 @@ export default function TaxList() {
                 <h2 className="text-2xl font-black text-slate-800 flex items-center gap-2">
                     <Percent className="text-blue-600" /> Tax Management
                 </h2>
-                <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">
-                    <Plus size={18} /> New Tax Rate
-                </button>
+                {hasPermission('tax.create') && (
+                    <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">
+                        <Plus size={18} /> New Tax Rate
+                    </button>
+                )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -82,8 +85,11 @@ export default function TaxList() {
                                             )}
                                         </div>
                                     </td>
+
                                     <td className="p-4 text-center">
-                                        <button onClick={() => { setFormData({ ...t.history, id: t.id }); setIsModalOpen(true); }} className="p-2 text-slate-400 hover:text-blue-600"><Edit size={18} /></button>
+                                        {hasPermission('tax.edit') && (
+                                            <button onClick={() => { setFormData({ ...t.history, id: t.id }); setIsModalOpen(true); }} className="p-2 text-slate-400 hover:text-blue-600"><Edit size={18} /></button>
+                                        )}
                                     </td>
                                 </tr>
                             ))}

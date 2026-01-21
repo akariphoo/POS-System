@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Plus, Trash2, X, Receipt, Calendar, Info, Loader2, AlertCircle, Edit3 } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../config/api";
+import { hasPermission } from "../common/HasPermission";
 
 export default function ExpenseList() {
   // State Management
@@ -28,8 +29,8 @@ export default function ExpenseList() {
       const url = firstLoad ? "/expenses?include_meta=true" : "/expenses";
       const res = await api.get(url);
       const { expenses: expData, meta: metaData } = res.data.data;
-      
-      setExpenses(expData.data || expData); 
+
+      setExpenses(expData.data || expData);
       if (firstLoad && metaData) setMeta(metaData);
     } catch (err) {
       toast.error("Failed to sync with server");
@@ -73,7 +74,7 @@ export default function ExpenseList() {
     setIsProcessing(true);
     try {
       const isUpdate = !!formData.id;
-      const res = isUpdate 
+      const res = isUpdate
         ? await api.put(`/expenses/${formData.id}`, formData)
         : await api.post("/expenses", formData);
 
@@ -112,8 +113,8 @@ export default function ExpenseList() {
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="animate-spin text-blue-600 mb-2" size={40} />
-        <p className="text-gray-400 font-medium">Loading Financial Records...</p>
+      <Loader2 className="animate-spin text-blue-600 mb-2" size={40} />
+      <p className="text-gray-400 font-medium">Loading Financial Records...</p>
     </div>
   );
 
@@ -127,12 +128,14 @@ export default function ExpenseList() {
           </h1>
           <p className="text-sm text-gray-400 font-medium">Manage and monitor daily business spending</p>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg active:scale-95"
-        >
-          <Plus size={20} /> Create New Expense
-        </button>
+        {hasPermission('expense.create') && (
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg active:scale-95"
+          >
+            <Plus size={20} /> Create New Expense
+          </button>
+        )}
       </div>
 
       {/* Main Table */}
@@ -152,10 +155,10 @@ export default function ExpenseList() {
                 <td className="p-5 pl-8">
                   <div className="flex flex-col">
                     <span className="text-[13px] font-bold text-gray-800 flex items-center gap-1.5">
-                        <Calendar size={14} className="text-gray-400" /> {exp.date}
+                      <Calendar size={14} className="text-gray-400" /> {exp.date}
                     </span>
                     <span className="text-[11px] font-black text-blue-600 uppercase mt-1 tracking-tight">
-                        {exp.category?.name || "Uncategorized"}
+                      {exp.category?.name || "Uncategorized"}
                     </span>
                   </div>
                 </td>
@@ -171,10 +174,14 @@ export default function ExpenseList() {
                   </div>
                 </td>
                 <td className="p-5 text-center">
-                   <div className="flex justify-center gap-1">
-                    <button onClick={() => openEditModal(exp)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"><Edit3 size={18} /></button>
-                    <button onClick={() => { setTargetId(exp.id); setIsDeleteModalOpen(true); }} className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"><Trash2 size={18} /></button>
-                   </div>
+                  <div className="flex justify-center gap-1">
+                    {hasPermission('expense.edit') && (
+                      <button onClick={() => openEditModal(exp)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"><Edit3 size={18} /></button>
+                    )}
+                    {hasPermission('expense.delete') && (
+                      <button onClick={() => { setTargetId(exp.id); setIsDeleteModalOpen(true); }} className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"><Trash2 size={18} /></button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -188,49 +195,49 @@ export default function ExpenseList() {
           <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center p-6 bg-blue-600 text-white">
               <h3 className="text-xl font-black uppercase tracking-tight">{formData.id ? "Update Expense" : "New Expense"}</h3>
-              <button onClick={closeModal} className="hover:bg-white/20 rounded-full p-1"><X/></button>
+              <button onClick={closeModal} className="hover:bg-white/20 rounded-full p-1"><X /></button>
             </div>
-            
+
             <div className="p-8 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Spending Date</label>
-                    <input type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="w-full border-2 border-gray-100 p-3 rounded-xl outline-none focus:border-blue-600 transition-colors" />
+                  <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Spending Date</label>
+                  <input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full border-2 border-gray-100 p-3 rounded-xl outline-none focus:border-blue-600 transition-colors" />
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Category</label>
-                    <select value={formData.expense_category_id} onChange={e => setFormData({...formData, expense_category_id: e.target.value})} className="w-full border-2 border-gray-100 p-3 rounded-xl outline-none focus:border-blue-600 transition-colors">
-                        <option value="">— Select —</option>
-                        {meta.categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
+                  <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Category</label>
+                  <select value={formData.expense_category_id} onChange={e => setFormData({ ...formData, expense_category_id: e.target.value })} className="w-full border-2 border-gray-100 p-3 rounded-xl outline-none focus:border-blue-600 transition-colors">
+                    <option value="">— Select —</option>
+                    {meta.categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
                 </div>
               </div>
 
               <div className="bg-blue-50/50 p-5 rounded-2xl border-2 border-dashed border-blue-100">
                 <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-4">Amount Input</p>
                 <div className="space-y-3">
-                    {meta.currencies.map(curr => {
-                      const existingAmt = formData.amounts.find(a => a.currency_id === curr.id)?.amount || "";
-                      return (
-                        <div key={curr.id} className="flex items-center bg-white p-1.5 rounded-xl border border-blue-50 shadow-sm">
-                            <span className="w-16 text-center font-black text-xs text-blue-600">{curr.name}</span>
-                            <input 
-                              type="number" 
-                              value={existingAmt}
-                              placeholder="0.00" 
-                              className="flex-1 p-2 bg-transparent outline-none font-bold text-gray-700"
-                              onChange={(e) => handleAmountChange(curr.id, e.target.value)}
-                            />
-                        </div>
-                      );
-                    })}
+                  {meta.currencies.map(curr => {
+                    const existingAmt = formData.amounts.find(a => a.currency_id === curr.id)?.amount || "";
+                    return (
+                      <div key={curr.id} className="flex items-center bg-white p-1.5 rounded-xl border border-blue-50 shadow-sm">
+                        <span className="w-16 text-center font-black text-xs text-blue-600">{curr.name}</span>
+                        <input
+                          type="number"
+                          value={existingAmt}
+                          placeholder="0.00"
+                          className="flex-1 p-2 bg-transparent outline-none font-bold text-gray-700"
+                          onChange={(e) => handleAmountChange(curr.id, e.target.value)}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              <textarea placeholder="Purchase notes..." className="w-full border-2 border-gray-100 p-3 rounded-xl outline-none focus:border-blue-600 min-h-[90px] text-sm" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+              <textarea placeholder="Purchase notes..." className="w-full border-2 border-gray-100 p-3 rounded-xl outline-none focus:border-blue-600 min-h-[90px] text-sm" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
 
               <button disabled={isProcessing} onClick={handleSave} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 flex justify-center">
-                {isProcessing ? <Loader2 className="animate-spin"/> : "SAVE CHANGES"}
+                {isProcessing ? <Loader2 className="animate-spin" /> : "SAVE CHANGES"}
               </button>
             </div>
           </div>
@@ -249,7 +256,7 @@ export default function ExpenseList() {
             <div className="grid grid-cols-2 gap-3">
               <button onClick={() => setIsDeleteModalOpen(false)} className="py-3 rounded-xl font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all">Cancel</button>
               <button onClick={executeDelete} disabled={isProcessing} className="py-3 rounded-xl font-bold bg-rose-500 text-white hover:bg-rose-600 transition-all shadow-lg shadow-rose-100 flex justify-center">
-                {isProcessing ? <Loader2 className="animate-spin" size={20}/> : "Delete"}
+                {isProcessing ? <Loader2 className="animate-spin" size={20} /> : "Delete"}
               </button>
             </div>
           </div>
