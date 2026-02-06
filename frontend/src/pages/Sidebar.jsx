@@ -195,6 +195,36 @@ export default function Sidebar() {
                 />
               )}
 
+              <SubItem
+                  label="Units"
+                  active={activeItem === "unit"}
+                  onClick={() => navigate("/unit")}
+                />
+
+                <SubItem
+                  label="Suppliers"
+                  active={activeItem === "supplier"}
+                  onClick={() => navigate("/supplier")}
+                />
+
+                <SubItem
+                  label="Products"
+                  active={activeItem === "product"}
+                  onClick={() => navigate("/product")}
+                />
+
+                <SubItem
+                  label="Discounts"
+                  active={activeItem === "discount"}
+                  onClick={() => navigate("/discount")}
+                />
+
+                <SubItem
+                  label="Product Discounts"
+                  active={activeItem === "product-discount"}
+                  onClick={() => navigate("/product-discount")}
+                />
+
               {/* Logout usually allowed for all authenticated users */}
               <SubItem
                 label="Logout"

@@ -5,7 +5,6 @@ import api from "../config/api";
 import { hasPermission } from "../common/HasPermission";
 
 export default function ExpenseList() {
-  // State Management
   const [expenses, setExpenses] = useState([]);
   const [meta, setMeta] = useState({ categories: [], currencies: [] });
   const [loading, setLoading] = useState(true);
@@ -14,13 +13,15 @@ export default function ExpenseList() {
   const [targetId, setTargetId] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Form State
+  // --- NEW: Error State ---
+  const [errors, setErrors] = useState({});
+
   const [formData, setFormData] = useState({
     id: null,
     date: new Date().toISOString().split("T")[0],
     expense_category_id: "",
     description: "",
-    amounts: [] // { currency_id, amount }
+    amounts: [] 
   });
 
   const loadData = useCallback(async (firstLoad = false) => {
@@ -29,7 +30,6 @@ export default function ExpenseList() {
       const url = firstLoad ? "/expenses?include_meta=true" : "/expenses";
       const res = await api.get(url);
       const { expenses: expData, meta: metaData } = res.data.data;
-
       setExpenses(expData.data || expData);
       if (firstLoad && metaData) setMeta(metaData);
     } catch (err) {
@@ -41,6 +41,11 @@ export default function ExpenseList() {
 
   useEffect(() => { loadData(true); }, [loadData]);
 
+  // --- NEW: Error Helper ---
+  const renderError = (field) => errors[field] ? (
+    <p className="text-red-500 text-[10px] mt-1 font-bold italic">{errors[field][0]}</p>
+  ) : null;
+
   const handleAmountChange = (currencyId, value) => {
     setFormData((prev) => {
       const otherAmounts = prev.amounts.filter(a => a.currency_id !== currencyId);
@@ -49,6 +54,60 @@ export default function ExpenseList() {
         amounts: [...otherAmounts, { currency_id: currencyId, amount: parseFloat(value) || 0 }]
       };
     });
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setErrors({}); // Clear errors when closing
+    setFormData({ id: null, date: new Date().toISOString().split("T")[0], expense_category_id: "", description: "", amounts: [] });
+  };
+
+  // --- MODIFIED: handleSave ---
+  const handleSave = async () => {
+    setErrors({});
+    setIsProcessing(true);
+    try {
+      const isUpdate = !!formData.id;
+      const res = isUpdate
+        ? await api.put(`/expenses/${formData.id}`, formData)
+        : await api.post("/expenses", formData);
+
+      // Check the 'status' flag from your Laravel handleServiceResponse
+      if (res.data.status) {
+        toast.success(res.data.message || "Success");
+        closeModal();
+        loadData(false);
+      } else {
+        // Handles cases where status is false but code is 200
+        toast.error(res.data.message || "Failed to process");
+      }
+    } catch (err) {
+      if (err.response?.data?.errors) {
+        // Handles Laravel Validation (422)
+        setErrors(err.response.data.errors);
+        toast.error("Please check the highlighted fields");
+      } else {
+        // Handles 404/400 (Like "No capital found for currency")
+        const msg = err.response?.data?.message || "Operation failed";
+        toast.error(msg);
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const executeDelete = async () => {
+    setIsProcessing(true);
+    try {
+      const res = await api.delete(`/expenses/${targetId}`);
+      toast.success(res.data.message || "Record removed");
+      loadData(false);
+      setIsDeleteModalOpen(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Delete failed");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const openEditModal = (exp) => {
@@ -65,50 +124,6 @@ export default function ExpenseList() {
     setIsModalOpen(true);
   };
 
-  const handleSave = async () => {
-    const hasValue = formData.amounts.some(a => a.amount > 0);
-    if (!formData.expense_category_id || !hasValue) {
-      return toast.error("Please select a category and enter an amount");
-    }
-
-    setIsProcessing(true);
-    try {
-      const isUpdate = !!formData.id;
-      const res = isUpdate
-        ? await api.put(`/expenses/${formData.id}`, formData)
-        : await api.post("/expenses", formData);
-
-      if (res.data.status) {
-        toast.success(isUpdate ? "Expense updated" : "Expense recorded");
-        closeModal();
-        loadData(false);
-      }
-    } catch (err) {
-      toast.error("Check your input data");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const executeDelete = async () => {
-    setIsProcessing(true);
-    try {
-      await api.delete(`/expenses/${targetId}`);
-      toast.success("Record removed");
-      loadData(false);
-      setIsDeleteModalOpen(false);
-    } catch (err) {
-      toast.error("Delete failed");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setFormData({ id: null, date: new Date().toISOString().split("T")[0], expense_category_id: "", description: "", amounts: [] });
-  };
-
   const formatNum = (num) => new Intl.NumberFormat().format(num);
 
   if (loading) return (
@@ -120,7 +135,6 @@ export default function ExpenseList() {
 
   return (
     <div className="p-6 bg-[#f0f4f8] min-h-screen font-sans">
-      {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-t-2xl border-b shadow-sm gap-4">
         <div>
           <h1 className="text-2xl font-black text-gray-800 flex items-center gap-2">
@@ -138,7 +152,6 @@ export default function ExpenseList() {
         )}
       </div>
 
-      {/* Main Table */}
       <div className="bg-white rounded-b-2xl shadow-sm border overflow-x-auto">
         <table className="w-full text-left">
           <thead className="bg-gray-50 border-b">
@@ -189,7 +202,6 @@ export default function ExpenseList() {
         </table>
       </div>
 
-      {/* Upsert Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
           <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
@@ -203,6 +215,7 @@ export default function ExpenseList() {
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Spending Date</label>
                   <input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full border-2 border-gray-100 p-3 rounded-xl outline-none focus:border-blue-600 transition-colors" />
+                  {renderError('date')}
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Category</label>
@@ -210,31 +223,38 @@ export default function ExpenseList() {
                     <option value="">— Select —</option>
                     {meta.categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
+                  {renderError('expense_category_id')}
                 </div>
               </div>
 
               <div className="bg-blue-50/50 p-5 rounded-2xl border-2 border-dashed border-blue-100">
                 <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-4">Amount Input</p>
                 <div className="space-y-3">
-                  {meta.currencies.map(curr => {
+                  {meta.currencies.map((curr, index) => {
                     const existingAmt = formData.amounts.find(a => a.currency_id === curr.id)?.amount || "";
                     return (
-                      <div key={curr.id} className="flex items-center bg-white p-1.5 rounded-xl border border-blue-50 shadow-sm">
-                        <span className="w-16 text-center font-black text-xs text-blue-600">{curr.name}</span>
-                        <input
-                          type="number"
-                          value={existingAmt}
-                          placeholder="0.00"
-                          className="flex-1 p-2 bg-transparent outline-none font-bold text-gray-700"
-                          onChange={(e) => handleAmountChange(curr.id, e.target.value)}
-                        />
+                      <div key={curr.id}>
+                        <div className="flex items-center bg-white p-1.5 rounded-xl border border-blue-50 shadow-sm">
+                          <span className="w-16 text-center font-black text-xs text-blue-600">{curr.name}</span>
+                          <input
+                            type="number"
+                            value={existingAmt}
+                            placeholder="0.00"
+                            className="flex-1 p-2 bg-transparent outline-none font-bold text-gray-700"
+                            onChange={(e) => handleAmountChange(curr.id, e.target.value)}
+                          />
+                        </div>
+                        {renderError(`amounts.${index}.amount`)}
                       </div>
                     );
                   })}
                 </div>
               </div>
 
-              <textarea placeholder="Purchase notes..." className="w-full border-2 border-gray-100 p-3 rounded-xl outline-none focus:border-blue-600 min-h-[90px] text-sm" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
+              <div className="space-y-1">
+                <textarea placeholder="Purchase notes..." className="w-full border-2 border-gray-100 p-3 rounded-xl outline-none focus:border-blue-600 min-h-[90px] text-sm" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
+                {renderError('description')}
+              </div>
 
               <button disabled={isProcessing} onClick={handleSave} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 flex justify-center">
                 {isProcessing ? <Loader2 className="animate-spin" /> : "SAVE CHANGES"}
@@ -244,7 +264,6 @@ export default function ExpenseList() {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-[60] p-4">
           <div className="bg-white rounded-3xl w-full max-w-sm p-8 shadow-2xl text-center animate-in zoom-in-95 duration-200">

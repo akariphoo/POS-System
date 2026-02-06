@@ -14,3 +14,8 @@ require __DIR__ . '/api/capital_api.php';
 require __DIR__ . '/api/expense_category_api.php';
 require __DIR__ . '/api/expense_api.php';
 require __DIR__ . '/api/tax_api.php';
+require __DIR__ . '/api/unit_api.php';
+require __DIR__ . '/api/supplier_api.php';
+require __DIR__ . '/api/product_api.php';
+require __DIR__ . '/api/discount_api.php';
+require __DIR__ . '/api/product_discount_api.php';

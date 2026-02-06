@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import Layout from "./pages/Layout";
 import POSLayout from "./pages/POSLayout";
 import "./index.css";
+import { Toaster } from "react-hot-toast";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("token");
@@ -57,6 +58,16 @@ const RootRoute = () => {
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
+   <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            fontSize: "14px",
+            fontWeight: "600",
+          },
+        }}
+      />
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/" element={<RootRoute />} />
